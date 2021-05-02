@@ -15,10 +15,13 @@
 
 #include "wifi.h" 
 #include "config.h"
+#include "http.h"
 
 void app_main(void)
 {
     printf("Started.\n");
+
+    static httpd_handle_t server;
 
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -29,6 +32,8 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     wifi_init_sta();
+
+    server = start_webserver();
 
     fflush(stdout);
     //esp_restart();
