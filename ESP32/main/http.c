@@ -7,6 +7,7 @@
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_eth.h"
+#include <esp_http_server.h>
 
 static const char *TAG = "example";
 
@@ -183,7 +184,7 @@ static const httpd_uri_t ctrl = {
     .user_ctx  = NULL
 };
 
-static httpd_handle_t start_webserver(void)
+httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -213,7 +214,7 @@ static httpd_handle_t start_webserver(void)
     return NULL;
 }
 
-static void stop_webserver(httpd_handle_t server)
+void stop_webserver(httpd_handle_t server)
 {
     // Stop the httpd server
     httpd_stop(server);

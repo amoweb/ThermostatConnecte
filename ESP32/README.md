@@ -19,3 +19,4 @@
 
 # Debug Console
 - idf.py -p [PORT] monitor
+
