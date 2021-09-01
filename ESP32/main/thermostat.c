@@ -45,7 +45,7 @@ void app_main(void)
         .scl_io_num = 22, // IO22
         .sda_pullup_en = false,
         .scl_pullup_en = false,
-        .master.clk_speed = 1000
+        .master.clk_speed = 2000
     };
 
     const i2c_port_t i2c_port = 0;
@@ -58,17 +58,28 @@ void app_main(void)
     // Install driver
     i2c_driver_install(i2c_port, I2C_MODE_MASTER, 0, 0, ESP_INTR_FLAG_LEVEL1);
 
-    uint8_t data[2];
+    uint8_t data[2] = {0, 0};
 
     while(true) {
         i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
-        i2c_master_write_byte(cmd_handle, /* TMP75 address */ 0x49, /* ack_en */ 1);
+        i2c_master_start(cmd_handle);
+        // Slave address
+        i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x48<<1) | 0, /* ack_en */ 1);
+        // Pointer register: Temperature register (P1 = P2 = 0)
+        i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 0);
+
+        i2c_master_start(cmd_handle);
+        i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x48<<1) | 1, /* ack_en */ 1);
         i2c_master_read(cmd_handle, data, /* data_len */ 2, /* ack_en */ 1);
-        printf("READ = %x %x\n", data[0], data[1]);
         i2c_master_stop(cmd_handle);
 
-        i2c_master_cmd_begin(i2c_port, cmd_handle, 9000);
+        int ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 500);
+        if(ret != ESP_OK) {
+            printf("I2C Error\n");
+        }
         i2c_cmd_link_delete(cmd_handle);
+
+        printf("READ = %x %x\n", data[0], data[1]);
     }
 
     i2c_driver_delete(i2c_port);
