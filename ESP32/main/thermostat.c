@@ -1,5 +1,5 @@
 /* Thermostat Connecté
-   Author: Amaury Graillat */
+Author: Amaury Graillat */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -31,8 +31,8 @@ void app_main(void)
     //Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
 
@@ -60,22 +60,32 @@ void app_main(void)
 
     uint8_t data[2] = {0, 0};
 
-    while(true) {
-        i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
-        i2c_master_start(cmd_handle);
-        // Slave address
-        i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x48<<1) | 0, /* ack_en */ 1);
-        // Pointer register: Temperature register (P1 = P2 = 0)
-        i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 0);
+    i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
+    i2c_master_start(cmd_handle);
+    // Slave address
+    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 0, /* ack_en */ 1);
+    // Pointer register: Temperature register (P1 = P2 = 0)
+    i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 0);
+    i2c_master_stop(cmd_handle);
+    ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 1000);
+    if(ret == ESP_FAIL) {
+        printf("I2C #1 Error ACK not received.\n");
+    } else if(ret != ESP_OK) {
+        printf("I2C #1 Error 0x%x\n", ret);
+    }
+    i2c_cmd_link_delete(cmd_handle);
 
+    while(true) {
+        cmd_handle = i2c_cmd_link_create();
         i2c_master_start(cmd_handle);
-        i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x48<<1) | 1, /* ack_en */ 1);
+        i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 1, /* ack_en */ 1);
         i2c_master_read(cmd_handle, data, /* data_len */ 2, /* ack_en */ 1);
         i2c_master_stop(cmd_handle);
-
-        int ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 500);
-        if(ret != ESP_OK) {
-            printf("I2C Error\n");
+        ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 1000);
+        if(ret == ESP_FAIL) {
+            printf("I2C #2 Error ACK not received.\n");
+        } else if(ret != ESP_OK) {
+            printf("I2C #2 Error 0x%x\n", ret);
         }
         i2c_cmd_link_delete(cmd_handle);
 
@@ -83,7 +93,7 @@ void app_main(void)
     }
 
     i2c_driver_delete(i2c_port);
-    
+
     //tmp75_init(PREC_0_0625);
 
     // float temp;
