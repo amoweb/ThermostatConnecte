@@ -60,25 +60,55 @@ void app_main(void)
 
     uint8_t data[2] = {0, 0};
 
+    ////////////// CONFIGURE TEMPERATURE RESOLUTION //////////////////
     i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
     i2c_master_start(cmd_handle);
     // Slave address
-    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 0, /* ack_en */ 1);
+    i2c_master_write_byte(cmd_handle, /* TMP75 address, write mode */ (0x49<<1) | 0, /* ack_en */ 1);
+    // Pointer register: Configuration register (P1 = 0,  P2 = 1)
+    i2c_master_write_byte(cmd_handle, 1, /* ack_en */ 1);
+    // Resolution 0.125 (R1 = 1, R0 = 1)
+    i2c_master_write_byte(cmd_handle, 0x60, /* ack_en */ 1);
+    i2c_master_stop(cmd_handle);
+
+    ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 1000);
+    if(ret == ESP_FAIL) {
+        printf("I2C #0 Error ACK not received.\n");
+        while(true)
+            ;
+    } else if(ret != ESP_OK) {
+        printf("I2C #0 Error 0x%x\n", ret);
+        while(true)
+            ;
+    }
+    i2c_cmd_link_delete(cmd_handle);
+
+
+    ////////////// SELECT TEMPERATURE REGISTER //////////////////
+    // Slave address
+    cmd_handle = i2c_cmd_link_create();
+    i2c_master_start(cmd_handle);
+    i2c_master_write_byte(cmd_handle, /* TMP75 address, write mode */ (0x49<<1) | 0, /* ack_en */ 1);
     // Pointer register: Temperature register (P1 = P2 = 0)
     i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 0);
     i2c_master_stop(cmd_handle);
     ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 1000);
     if(ret == ESP_FAIL) {
         printf("I2C #1 Error ACK not received.\n");
+        while(true)
+            ;
     } else if(ret != ESP_OK) {
         printf("I2C #1 Error 0x%x\n", ret);
+        while(true)
+            ;
     }
     i2c_cmd_link_delete(cmd_handle);
 
     while(true) {
+        ////////////// READ TEMPERATURE //////////////////
         cmd_handle = i2c_cmd_link_create();
         i2c_master_start(cmd_handle);
-        i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 1, /* ack_en */ 1);
+        i2c_master_write_byte(cmd_handle, /* TMP75 address, read mode */ (0x49<<1) | 1, /* ack_en */ 1);
         i2c_master_read(cmd_handle, data, /* data_len */ 2, /* ack_en */ 1);
         i2c_master_stop(cmd_handle);
         ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 1000);
