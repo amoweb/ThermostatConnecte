@@ -40,15 +40,16 @@ void app_main(void)
 
     tmp175_alt_init();
 
+    server = start_webserver();
+
     while(true) {
         double tmp = tmp175_alt_get_temp();
         printf("%f\n", tmp);
     }
 
-    server = start_webserver();
-
     fflush(stdout);
 
+    stop_webserver(server);
     tmp175_alt_stop();
 
     //esp_restart();
