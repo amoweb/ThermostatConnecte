@@ -22,6 +22,20 @@ Author: Amaury Graillat */
 
 #include "TMP175_alt/tmp175.h"
 
+char str[50];
+char* http_get_handler(const char* uri)
+{
+    double tmp = tmp175_alt_get_temp();
+    sprintf(str, "%f\n", tmp);
+
+    return str;
+}
+
+void http_post_handler(const char* uri, const char* data)
+{
+    printf("POST %s : %s\n", uri, data);
+}
+
 void app_main(void)
 {
     printf("Started.\n");
@@ -41,6 +55,9 @@ void app_main(void)
     tmp175_alt_init();
 
     server = start_webserver();
+
+    register_get_endpoint(server, "/", http_get_handler);
+    register_post_endpoint(server, "/echo", http_post_handler);
 
     while(true) {
         double tmp = tmp175_alt_get_temp();

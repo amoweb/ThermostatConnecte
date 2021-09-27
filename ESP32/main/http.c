@@ -12,73 +12,30 @@
 static const char *TAG = "example";
 
 #define MAX_REGISTERED_ENPOINT 10
-unsigned int nb_registered_endpoint = 0;
-struct endpoint {
+#define MAX_RECV_POST_SIZE_BYTE 1024
+
+// Store GET endpoints
+unsigned int nb_registered_get_endpoint = 0;
+struct get_endpoint {
     char* uri;
     char* (*fun_ptr)(const char*);
 };
-static struct endpoint registered_function_endpoint[MAX_REGISTERED_ENPOINT];
-httpd_uri_t registered_endpoint[MAX_REGISTERED_ENPOINT];
+static struct get_endpoint registered_function_get_endpoint[MAX_REGISTERED_ENPOINT];
+httpd_uri_t registered_get_endpoint[MAX_REGISTERED_ENPOINT];
+
+// Store POST endpoints
+unsigned int nb_registered_post_endpoint = 0;
+struct post_endpoint {
+    char* uri;
+    void (*fun_ptr)(const char*, const char*);
+};
+static struct post_endpoint registered_function_post_endpoint[MAX_REGISTERED_ENPOINT];
+httpd_uri_t registered_post_endpoint[MAX_REGISTERED_ENPOINT];
 
 /* An HTTP GET handler */
 static esp_err_t http_get_handler(httpd_req_t *req)
 {
-    char*  buf;
-    size_t buf_len;
-
-    /* Get header value string length and allocate memory for length + 1,
-     * extra byte for null termination */
-    buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        /* Copy null terminated value string into buffer */
-        if (httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Host: %s", buf);
-        }
-        free(buf);
-    }
-
-    buf_len = httpd_req_get_hdr_value_len(req, "Test-Header-2") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_hdr_value_str(req, "Test-Header-2", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Test-Header-2: %s", buf);
-        }
-        free(buf);
-    }
-
-    buf_len = httpd_req_get_hdr_value_len(req, "Test-Header-1") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_hdr_value_str(req, "Test-Header-1", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Test-Header-1: %s", buf);
-        }
-        free(buf);
-    }
-
-    /* Read URL query string length and allocate memory for length + 1,
-     * extra byte for null termination */
-    buf_len = httpd_req_get_url_query_len(req) + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found URL query => %s", buf);
-            char param[32];
-            /* Get value of expected key from query string */
-            if (httpd_query_key_value(buf, "query1", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query1=%s", param);
-            }
-            if (httpd_query_key_value(buf, "query3", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query3=%s", param);
-            }
-            if (httpd_query_key_value(buf, "query2", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query2=%s", param);
-            }
-        }
-        free(buf);
-    }
-
-    struct endpoint* f = (struct endpoint*)req->user_ctx;
+    struct get_endpoint* f = (struct get_endpoint*)req->user_ctx;
     const char* resp_str = f->fun_ptr(f->uri);
 
     httpd_resp_send(req, resp_str, strlen(resp_str));
@@ -92,62 +49,43 @@ static esp_err_t http_get_handler(httpd_req_t *req)
 }
 
 /**
-  Register an HTTP endpoint.
+  Register an HTTP get_endpoint.
   */
-void register_endpoint(httpd_handle_t server, char* uri, char* (*fun_ptr)(const char*))
+void register_get_endpoint(httpd_handle_t server, char* uri, char* (*fun_ptr)(const char*))
 {
-    if(nb_registered_endpoint == MAX_REGISTERED_ENPOINT) {
+    if(nb_registered_get_endpoint == MAX_REGISTERED_ENPOINT) {
         printf("Cannot register. Increase MAX_REGISTERED_ENPOINT.\n");
         return;
     }
 
     char* cpy_str = malloc(strlen(uri) + 1);
     strcpy(cpy_str, uri);
-    registered_function_endpoint[nb_registered_endpoint].uri = cpy_str;
-    registered_function_endpoint[nb_registered_endpoint].fun_ptr = fun_ptr;
+    registered_function_get_endpoint[nb_registered_get_endpoint].uri = cpy_str;
+    registered_function_get_endpoint[nb_registered_get_endpoint].fun_ptr = fun_ptr;
 
-    registered_endpoint[nb_registered_endpoint].uri       = cpy_str;
-    registered_endpoint[nb_registered_endpoint].method    = HTTP_GET;
-    registered_endpoint[nb_registered_endpoint].handler   = http_get_handler;
+    registered_get_endpoint[nb_registered_get_endpoint].uri       = cpy_str;
+    registered_get_endpoint[nb_registered_get_endpoint].method    = HTTP_GET;
+    registered_get_endpoint[nb_registered_get_endpoint].handler   = http_get_handler;
     // index in registered_function_array 
-    registered_endpoint[nb_registered_endpoint].user_ctx  = (void*)(&registered_function_endpoint[nb_registered_endpoint]);
+    registered_get_endpoint[nb_registered_get_endpoint].user_ctx  = (void*)(&registered_function_get_endpoint[nb_registered_get_endpoint]);
 
-    httpd_register_uri_handler(server, &registered_endpoint[nb_registered_endpoint]);
+    httpd_register_uri_handler(server, &registered_get_endpoint[nb_registered_get_endpoint]);
 
-    nb_registered_endpoint++;
+    nb_registered_get_endpoint++;
 }
-
-
-
-
-static char str[10];
-char* test_get_string(const char* uri)
-{
-    printf("test_get_string\n");
-    static int i = 0;
-
-    sprintf(str, "%s [%d]", uri, i);
-
-    i = (i + 1) % 10;
-
-    return str;
-}
-
-static const httpd_uri_t hello = {
-    .uri       = "/hello",
-    .method    = HTTP_GET,
-    .handler   = http_get_handler,
-    /* Let's pass response string in user
-     * context to demonstrate it's usage */
-    .user_ctx  = &registered_function_endpoint[0] // index in registered_function_array 
-};
 
 /* An HTTP POST handler */
-static esp_err_t echo_post_handler(httpd_req_t *req)
+static esp_err_t http_post_handler(httpd_req_t *req)
 {
-    char buf[100];
+    char fullBuf[MAX_RECV_POST_SIZE_BYTE];
+    char buf[MAX_RECV_POST_SIZE_BYTE];
     int ret, remaining = req->content_len;
 
+    if(remaining > MAX_RECV_POST_SIZE_BYTE) {
+        return ESP_FAIL;
+    }
+
+    unsigned int pos = 0;
     while (remaining > 0) {
         /* Read the data for the request */
         if ((ret = httpd_req_recv(req, buf,
@@ -159,9 +97,11 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
             return ESP_FAIL;
         }
 
-        /* Send back the same data */
-        httpd_resp_send_chunk(req, buf, ret);
+        memcpy(&fullBuf[pos], buf, ret);
+        fullBuf[pos + ret] = 0;
+
         remaining -= ret;
+        pos += ret;
 
         /* Log data received */
         ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
@@ -169,17 +109,40 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "====================================");
     }
 
+    struct post_endpoint* f = (struct post_endpoint*)req->user_ctx;
+    f->fun_ptr(f->uri, fullBuf);
+
     // End response
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
 
-static const httpd_uri_t echo = {
-    .uri       = "/echo",
-    .method    = HTTP_POST,
-    .handler   = echo_post_handler,
-    .user_ctx  = NULL
-};
+/**
+  Register an HTTP POST endpoint.
+  */
+void register_post_endpoint(httpd_handle_t server, char* uri, void (*fun_ptr)(const char*, const char*))
+{
+    if(nb_registered_post_endpoint == MAX_REGISTERED_ENPOINT) {
+        printf("Cannot register. Increase MAX_REGISTERED_ENPOINT.\n");
+        return;
+    }
+
+    char* cpy_str = malloc(strlen(uri) + 1);
+    strcpy(cpy_str, uri);
+    registered_function_post_endpoint[nb_registered_post_endpoint].uri = cpy_str;
+    registered_function_post_endpoint[nb_registered_post_endpoint].fun_ptr = fun_ptr;
+
+    registered_post_endpoint[nb_registered_post_endpoint].uri       = cpy_str;
+    registered_post_endpoint[nb_registered_post_endpoint].method    = HTTP_POST;
+    registered_post_endpoint[nb_registered_post_endpoint].handler   = http_post_handler;
+    // index in registered_function_array 
+    registered_post_endpoint[nb_registered_post_endpoint].user_ctx  = (void*)(&registered_function_post_endpoint[nb_registered_post_endpoint]);
+
+    httpd_register_uri_handler(server, &registered_post_endpoint[nb_registered_post_endpoint]);
+
+    nb_registered_post_endpoint++;
+}
+
 
 esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
@@ -188,55 +151,10 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
     return ESP_FAIL;
 }
 
-/* An HTTP PUT handler. This demonstrates realtime
- * registration and deregistration of URI handlers
- */
-static esp_err_t ctrl_put_handler(httpd_req_t *req)
-{
-    char buf;
-    int ret;
-
-    if ((ret = httpd_req_recv(req, &buf, 1)) <= 0) {
-        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
-            httpd_resp_send_408(req);
-        }
-        return ESP_FAIL;
-    }
-
-    if (buf == '0') {
-        /* URI handlers can be unregistered using the uri string */
-        ESP_LOGI(TAG, "Unregistering /hello and /echo URIs");
-        httpd_unregister_uri(req->handle, "/hello");
-        httpd_unregister_uri(req->handle, "/echo");
-        /* Register the custom error handler */
-        httpd_register_err_handler(req->handle, HTTPD_404_NOT_FOUND, http_404_error_handler);
-    }
-    else {
-        ESP_LOGI(TAG, "Registering /hello and /echo URIs");
-
-        httpd_register_uri_handler(req->handle, &hello);
-        httpd_register_uri_handler(req->handle, &echo);
-        /* Unregister custom error handler */
-        httpd_register_err_handler(req->handle, HTTPD_404_NOT_FOUND, NULL);
-    }
-
-    /* Respond with empty body */
-    httpd_resp_send(req, NULL, 0);
-    return ESP_OK;
-}
-
-static const httpd_uri_t ctrl = {
-    .uri       = "/ctrl",
-    .method    = HTTP_PUT,
-    .handler   = ctrl_put_handler,
-    .user_ctx  = NULL
-};
-
 httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
 
 #if 0
     // TODO
@@ -253,16 +171,9 @@ httpd_handle_t start_webserver(void)
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
 
-        printf("register test_get_string\n");
-        registered_function_endpoint[0].fun_ptr = &test_get_string;
-        nb_registered_endpoint++;
+        // Test with curl -i -X POST -d '123' http://192.168.0.16/echo
+        // httpd_register_uri_handler(server, &echo);
 
-        register_endpoint(server, "/hello2", &test_get_string);
-        register_endpoint(server, "/hello3", &test_get_string);
-
-        httpd_register_uri_handler(server, &hello);
-        httpd_register_uri_handler(server, &echo);
-        httpd_register_uri_handler(server, &ctrl);
         return server;
     }
 
@@ -270,10 +181,24 @@ httpd_handle_t start_webserver(void)
     return NULL;
 }
 
+void free_endpoints(httpd_handle_t server)
+{
+    for(int i = 0; i < nb_registered_get_endpoint; i++) {
+        free(registered_function_get_endpoint[i].uri);
+        registered_function_get_endpoint[i].uri = NULL;
+    }
+
+    for(int i = 0; i < nb_registered_post_endpoint; i++) {
+        free(registered_function_post_endpoint[i].uri);
+        registered_function_post_endpoint[i].uri = NULL;
+    }
+}
+
 void stop_webserver(httpd_handle_t server)
 {
     // Stop the httpd server
     httpd_stop(server);
+    free_endpoints(server);
 }
 
 static void disconnect_handler(void* arg, esp_event_base_t event_base, 
