@@ -14,12 +14,15 @@ Author: Amaury Graillat */
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#include "TMP175\TMP75.h"
+#include "TMP175/TMP75.h"
+
+#include "LED.h"
 
 #include "wifi.h" 
 #include "config.h"
 #include "http.h"
 
+#include "LM35/LM35.h"
 #include "TMP175_alt/tmp175.h"
 
 char str[50];
@@ -54,14 +57,25 @@ void app_main(void)
 
     tmp175_alt_init();
 
+    led_init(THERMOSTAT_LED_GPIO);
+
     server = start_webserver();
 
     register_get_endpoint(server, "/", http_get_handler);
     register_post_endpoint(server, "/echo", http_post_handler);
 
+    LM35_init_adc1(THERMOSTAT_LM35_ADC);
+
     while(true) {
         double tmp = tmp175_alt_get_temp();
-        printf("%f\n", tmp);
+        double tmp2 = LM35_get_temp();
+        printf("%f : %f\n", tmp, tmp2);
+
+        if(((int)tmp)%2 == 0) {
+            led_on(THERMOSTAT_LED_GPIO);
+        } else {
+            led_off(THERMOSTAT_LED_GPIO);
+        }
     }
 
     fflush(stdout);
