@@ -14,16 +14,15 @@ Author: Amaury Graillat */
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#include "TMP175/TMP75.h"
+#include "device/TMP175/TMP75.h"
+#include "device/LED/LED.h"
+#include "device/LM35/LM35.h"
+#include "device/TMP175_alt/tmp175.h"
 
-#include "LED.h"
+#include "network/wifi/wifi.h" 
+#include "network/http/http.h"
 
-#include "wifi.h" 
 #include "config.h"
-#include "http.h"
-
-#include "LM35/LM35.h"
-#include "TMP175_alt/tmp175.h"
 
 char str[50];
 char* http_get_handler(const char* uri)

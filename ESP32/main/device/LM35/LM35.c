@@ -2,7 +2,7 @@
 #include "driver/adc_common.h"
 #include "hal/adc_types.h"
 #include "esp_adc_cal.h"
-#include "../config.h"
+#include "../../config.h"
 
 static adc1_channel_t adc_chan;
 static esp_adc_cal_characteristics_t chars;
