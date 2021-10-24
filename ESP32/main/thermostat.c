@@ -18,6 +18,7 @@ Author: Amaury Graillat */
 #include "device/LED/LED.h"
 #include "device/LM35/LM35.h"
 #include "device/TMP175_alt/tmp175.h"
+#include "device/pushbutton/pushbutton.h"
 
 #include "network/wifi/wifi.h" 
 #include "network/http/http.h"
@@ -36,6 +37,16 @@ char* http_get_handler(const char* uri)
 void http_post_handler(const char* uri, const char* data)
 {
     printf("POST %s : %s\n", uri, data);
+}
+
+void pushbutton_black_handler(void * args)
+{
+    led_on(THERMOSTAT_LED_GPIO);
+}
+
+void pushbutton_red_handler(void * args)
+{
+    led_off(THERMOSTAT_LED_GPIO);
 }
 
 void app_main(void)
@@ -65,16 +76,13 @@ void app_main(void)
 
     LM35_init_adc1(THERMOSTAT_LM35_ADC);
 
+    pushbutton_register_handler(THERMOSTAT_PB_BLACK_GPIO, pushbutton_black_handler, NULL);
+    pushbutton_register_handler(THERMOSTAT_PB_RED_GPIO, pushbutton_red_handler, NULL);
+
     while(true) {
         double tmp = tmp175_alt_get_temp();
         double tmp2 = LM35_get_temp();
         printf("%f : %f\n", tmp, tmp2);
-
-        if(((int)tmp)%2 == 0) {
-            led_on(THERMOSTAT_LED_GPIO);
-        } else {
-            led_off(THERMOSTAT_LED_GPIO);
-        }
     }
 
     fflush(stdout);
