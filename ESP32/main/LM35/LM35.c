@@ -20,14 +20,26 @@ void LM35_init_adc1(adc1_channel_t adc_channel)
 
 double LM35_get_temp() 
 {
-    int read_raw = adc1_get_raw( adc_chan );
-
     // ADC: 12 bits 
 
+    double temp = 0;
+    const int N = 5;
+    for(int i=0; i < N; i++) {
+        int read_raw = adc1_get_raw( adc_chan );
 
-    double val_mV = esp_adc_cal_raw_to_voltage(read_raw, &chars);
+        if(read_raw == -1) {
+            // ERROR
+            printf("LM35_get_temp: read_raw error\n");
+        }
 
-    double val_degrees = (val_mV / THERMOSTAT_LM35_MV_PER_DEGREES) - THERMOSTAT_LM35_DEGREES_OFFSET;
+        double val_mV = esp_adc_cal_raw_to_voltage(read_raw, &chars);
+        double val_degrees = (val_mV / THERMOSTAT_LM35_MV_PER_DEGREES) + THERMOSTAT_LM35_DEGREES_OFFSET;
 
-    return val_degrees;
+        if(val_degrees > 0) {
+            temp += (val_degrees / N);
+        } 
+    }
+
+    return temp;
 }
+
