@@ -14,7 +14,7 @@ void tmp175_alt_init()
         .scl_io_num = 22, // IO22
         .sda_pullup_en = false,
         .scl_pullup_en = false,
-        .master.clk_speed = 500
+        .master.clk_speed = 2000
     };
 
     esp_err_t err = i2c_param_config(i2c_port /* I2C driver num 0 */, &i2cConfig);
@@ -37,13 +37,13 @@ double tmp175_alt_get_temp() {
 
     printf("top\n");
 
-    // i2c_cmd_handle_t cmd_handle;
-#if 1
+    i2c_cmd_handle_t cmd_handle;
+#if 0
     ////////////// UPDATE CONFIGURATION //////////////////
-    i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
+    cmd_handle = i2c_cmd_link_create();
     i2c_master_start(cmd_handle);
     // Slave address
-    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 0 /* write */, /* ack_en */ 1);
+    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | I2C_MASTER_WRITE, /* ack_en */ 1);
     // Pointer register: Configuration register (P1 = 0, P2 = 1)
     i2c_master_write_byte(cmd_handle, 1, /* ack_en */ 1);
     // Data byte 1
@@ -62,7 +62,7 @@ double tmp175_alt_get_temp() {
 #endif
 
     printf("tic\n");
-    vTaskDelay(portTICK_PERIOD_MS * 10);
+    vTaskDelay(portTICK_PERIOD_MS * 30);
     printf("toc\n");
 
     ////////////////////// READ TEMPERATURE /////////////////////
@@ -71,12 +71,16 @@ double tmp175_alt_get_temp() {
     cmd_handle = i2c_cmd_link_create();
     i2c_master_start(cmd_handle); 
     // Slave address
-    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 0 /*write*/, /* ack_en */ 1);
+    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | I2C_MASTER_WRITE, /* ack_en */ 1);
     // Pointer register: Temperature register (P1 = P2 = 0)
     i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 1);
-    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | 1 /*read*/, /* ack_en */ 1);
+    
+    // Slave address
+    i2c_master_start(cmd_handle); 
+    i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | I2C_MASTER_READ, /* ack_en */ 1);
     i2c_master_read(cmd_handle, data, /* data_len */ 2, /* ack_en */ 1);
     i2c_master_stop(cmd_handle);
+
     ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 200);
     if(ret == ESP_FAIL) {
         printf("I2C #2 Error ACK not received.\n");
