@@ -38,7 +38,8 @@ double tmp175_alt_get_temp() {
     printf("top\n");
 
     i2c_cmd_handle_t cmd_handle;
-#if 0
+
+#if 1
     ////////////// UPDATE CONFIGURATION //////////////////
     cmd_handle = i2c_cmd_link_create();
     i2c_master_start(cmd_handle);
@@ -47,7 +48,7 @@ double tmp175_alt_get_temp() {
     // Pointer register: Configuration register (P1 = 0, P2 = 1)
     i2c_master_write_byte(cmd_handle, 1, /* ack_en */ 1);
     // Data byte 1
-    i2c_master_write_byte(cmd_handle, 0x60 | 0x01 | 0x80 /* 0110 0000 => 12 bits */, /* ack_en */ 1);
+    i2c_master_write_byte(cmd_handle, 0b11100000 /* 0110 0000 => one shot, 12 bits */, /* ack_en */ 1);
     // Data byte 2
     // i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 1);
 
@@ -61,9 +62,7 @@ double tmp175_alt_get_temp() {
     i2c_cmd_link_delete(cmd_handle);
 #endif
 
-    printf("tic\n");
-    vTaskDelay(portTICK_PERIOD_MS * 30);
-    printf("toc\n");
+    vTaskDelay(portTICK_PERIOD_MS * 220);
 
     ////////////////////// READ TEMPERATURE /////////////////////
     uint8_t data[2] = {0, 0};
@@ -78,7 +77,7 @@ double tmp175_alt_get_temp() {
     // Slave address
     i2c_master_start(cmd_handle); 
     i2c_master_write_byte(cmd_handle, /* TMP75 address */ (0x49<<1) | I2C_MASTER_READ, /* ack_en */ 1);
-    i2c_master_read(cmd_handle, data, /* data_len */ 2, /* ack_en */ 1);
+    i2c_master_read(cmd_handle, data, /* data_len */ 2, /* ack_en */ 0);
     i2c_master_stop(cmd_handle);
 
     ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 200);
@@ -89,7 +88,7 @@ double tmp175_alt_get_temp() {
     }
     i2c_cmd_link_delete(cmd_handle);
 
-    return data[0];
+    return data[0] + (data[1] >> 4) * 0.0625;
 }
 
 void tmp175_alt_stop()
