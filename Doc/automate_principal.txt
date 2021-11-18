@@ -1,0 +1,20 @@
+@startuml
+
+[*] --> On
+
+state On {
+  [*] --> Veille
+  Statistique --> Regulation : POST /on
+  Regulation --> Statistique : POST /off
+  Regulation --> Regulation : POST /consigne_temperature
+  state Regulation {
+      [*] --> Chauffe
+      Chauffe --> Stop
+  }
+}
+
+On --> On : GET /temperature
+On --> On : GET /statistiques
+
+@enduml
+
