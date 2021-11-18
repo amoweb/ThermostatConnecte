@@ -35,11 +35,8 @@ double tmp175_alt_get_temp() {
 
     esp_err_t ret;
 
-    printf("top\n");
-
     i2c_cmd_handle_t cmd_handle;
 
-#if 1
     ////////////// UPDATE CONFIGURATION //////////////////
     cmd_handle = i2c_cmd_link_create();
     i2c_master_start(cmd_handle);
@@ -48,9 +45,7 @@ double tmp175_alt_get_temp() {
     // Pointer register: Configuration register (P1 = 0, P2 = 1)
     i2c_master_write_byte(cmd_handle, 1, /* ack_en */ 1);
     // Data byte 1
-    i2c_master_write_byte(cmd_handle, 0b11100000 /* 0110 0000 => one shot, 12 bits */, /* ack_en */ 1);
-    // Data byte 2
-    // i2c_master_write_byte(cmd_handle, 0, /* ack_en */ 1);
+    i2c_master_write_byte(cmd_handle, 0b11100000 /* one shot, 12 bits */, /* ack_en */ 1);
 
     i2c_master_stop(cmd_handle);
     ret = i2c_master_cmd_begin(i2c_port, cmd_handle, 200);
@@ -60,9 +55,8 @@ double tmp175_alt_get_temp() {
         printf("I2C #1 Error 0x%x\n", ret);
     }
     i2c_cmd_link_delete(cmd_handle);
-#endif
 
-    vTaskDelay(portTICK_PERIOD_MS * 220);
+    vTaskDelay(230 / portTICK_PERIOD_MS);
 
     ////////////////////// READ TEMPERATURE /////////////////////
     uint8_t data[2] = {0, 0};
