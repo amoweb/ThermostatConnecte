@@ -24,13 +24,21 @@ Author: Amaury Graillat */
 
 #include "controller/hysteresis/hysteresis.h"
 
+#include "pages/pages.h"
+
 #include "config.h"
 
 char str[50];
-char* http_get_handler(const char* uri)
+const char* http_get_handler(const char* uri)
 {
-    double tmp = tmp175_alt_get_temp();
-    sprintf(str, "%f\n", tmp);
+    printf("Request page [%s]\n", uri);
+
+    if(strcmp(uri, "/temp") == 0) {
+        double tmp = tmp175_alt_get_temp();
+        sprintf(str, "%f\n", tmp);
+    } else if(strcmp(uri, "/") == 0) {
+        return page_index;
+    }
 
     return str;
 }
@@ -38,6 +46,12 @@ char* http_get_handler(const char* uri)
 void http_post_handler(const char* uri, const char* data)
 {
     printf("POST %s : %s\n", uri, data);
+
+    double target_temperature = strtod(&data[14], NULL);
+
+    printf("Target temperature : %f\n", target_temperature);
+
+    hysteresis_set_target(target_temperature);
 }
 
 void pushbutton_black_handler(void * args)
@@ -72,8 +86,9 @@ void app_main(void)
 
     server = start_webserver();
 
+    register_get_endpoint(server, "/", http_get_handler);
     register_get_endpoint(server, "/temp", http_get_handler);
-    register_post_endpoint(server, "/echo", http_post_handler);
+    register_post_endpoint(server, "/", http_post_handler);
 
     LM35_init_adc1(THERMOSTAT_LM35_ADC);
 

@@ -18,7 +18,7 @@ static const char *TAG = "example";
 unsigned int nb_registered_get_endpoint = 0;
 struct get_endpoint {
     char* uri;
-    char* (*fun_ptr)(const char*);
+    const char* (*fun_ptr)(const char*);
 };
 static struct get_endpoint registered_function_get_endpoint[MAX_REGISTERED_ENPOINT];
 httpd_uri_t registered_get_endpoint[MAX_REGISTERED_ENPOINT];
@@ -51,7 +51,7 @@ static esp_err_t http_get_handler(httpd_req_t *req)
 /**
   Register an HTTP get_endpoint.
   */
-void register_get_endpoint(httpd_handle_t server, char* uri, char* (*fun_ptr)(const char*))
+void register_get_endpoint(httpd_handle_t server, char* uri, const char* (*fun_ptr)(const char*))
 {
     if(nb_registered_get_endpoint == MAX_REGISTERED_ENPOINT) {
         printf("Cannot register. Increase MAX_REGISTERED_ENPOINT.\n");

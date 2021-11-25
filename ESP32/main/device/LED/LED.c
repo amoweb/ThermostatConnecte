@@ -14,6 +14,11 @@ void led_init(gpio_num_t port)
     gpio_config(&io_conf);
 }
 
+void led_set_level(gpio_num_t port, bool state)
+{
+    gpio_set_level(port, state);
+}
+
 void led_on(gpio_num_t port)
 {
     gpio_set_level(port, 1);
