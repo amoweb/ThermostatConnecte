@@ -14,7 +14,6 @@ Author: Amaury Graillat */
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#include "device/TMP175/TMP75.h"
 #include "device/LED/LED.h"
 #include "device/LM35/LM35.h"
 #include "device/TMP175_alt/tmp175.h"
@@ -22,6 +21,8 @@ Author: Amaury Graillat */
 
 #include "network/wifi/wifi.h" 
 #include "network/http/http.h"
+
+#include "controller/hysteresis/hysteresis.h"
 
 #include "config.h"
 
@@ -71,7 +72,7 @@ void app_main(void)
 
     server = start_webserver();
 
-    register_get_endpoint(server, "/", http_get_handler);
+    register_get_endpoint(server, "/temp", http_get_handler);
     register_post_endpoint(server, "/echo", http_post_handler);
 
     LM35_init_adc1(THERMOSTAT_LM35_ADC);
@@ -79,10 +80,16 @@ void app_main(void)
     pushbutton_register_handler(THERMOSTAT_PB_BLACK_GPIO, pushbutton_black_handler, NULL);
     pushbutton_register_handler(THERMOSTAT_PB_RED_GPIO, pushbutton_red_handler, NULL);
 
+    hysteresis_init();
+    hysteresis_set_target(23);
+
+    bool heat;
     while(true) {
         double tmp = tmp175_alt_get_temp();
-        double tmp2 = LM35_get_temp();
-        printf("%f : %f\n", tmp, tmp2);
+
+        hysteresis_step(tmp, &heat);
+
+        printf("%f : %s\n", tmp, (heat?"HEAT":"NO"));
     }
 
     fflush(stdout);
