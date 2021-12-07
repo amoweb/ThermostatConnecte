@@ -1,3 +1,7 @@
+# Board
+
+This is based on the ESP32-PICO-KIT V4.
+
 # How to compile? (Windows)
 
 - Open ESP-IDF PowerShell
@@ -19,3 +23,4 @@
 
 # Debug Console
 - idf.py -p [PORT] monitor
+
