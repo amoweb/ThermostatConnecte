@@ -15,6 +15,7 @@ Author: Amaury Graillat */
 #include "lwip/sys.h"
 
 #include "device/LED/LED.h"
+#include "device/relay/relay.h"
 #include "device/LM35/LM35.h"
 #include "device/TMP175_alt/tmp175.h"
 #include "device/pushbutton/pushbutton.h"
@@ -57,11 +58,13 @@ void http_post_handler(const char* uri, const char* data)
 void pushbutton_black_handler(void * args)
 {
     led_on(THERMOSTAT_LED_GPIO);
+    relay_on(THERMOSTAT_RELAY_GPIO);
 }
 
 void pushbutton_red_handler(void * args)
 {
     led_off(THERMOSTAT_LED_GPIO);
+    relay_off(THERMOSTAT_RELAY_GPIO);
 }
 
 void app_main(void)
@@ -83,6 +86,7 @@ void app_main(void)
     tmp175_alt_init();
 
     led_init(THERMOSTAT_LED_GPIO);
+    relay_init(THERMOSTAT_RELAY_GPIO);
 
     server = start_webserver();
 
@@ -103,6 +107,8 @@ void app_main(void)
         double tmp = tmp175_alt_get_temp();
 
         hysteresis_step(tmp, &heat);
+
+        // led_set_level(THERMOSTAT_RELAY_GPIO, heat);
 
         printf("%f : %s\n", tmp, (heat?"HEAT":"NO"));
     }
