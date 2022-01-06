@@ -14,6 +14,8 @@ Author: Amaury Graillat */
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "esp_spiffs.h"
+
 #include "device/LED/LED.h"
 #include "device/relay/relay.h"
 #include "device/LM35/LM35.h"
@@ -25,11 +27,10 @@ Author: Amaury Graillat */
 
 #include "controller/hysteresis/hysteresis.h"
 
-#include "pages/pages.h"
-
 #include "config.h"
 
-char str[50];
+#define RESPONSE_BUFFER_SIZE 512
+char str[RESPONSE_BUFFER_SIZE];
 const char* http_get_handler(const char* uri)
 {
     printf("Request page [%s]\n", uri);
@@ -37,8 +38,41 @@ const char* http_get_handler(const char* uri)
     if(strcmp(uri, "/temp") == 0) {
         double tmp = tmp175_alt_get_temp();
         sprintf(str, "%f\n", tmp);
+
     } else if(strcmp(uri, "/") == 0) {
-        return page_index;
+
+        // TODO on pourrait optimiser ici en évitant de tout charger en mémoire
+        // avant d'envoyer. Mais plutôt créer un handler pour le GET qui fait
+        // les lectures et les sends en même temps.
+
+        // Open for reading hello.txt
+        FILE* f = fopen("/spiffs/index.html", "r");
+
+        if (f == NULL) {
+            return "ERROR failed to open file.";
+        }
+
+        // Read file
+        const unsigned int chunkSizeBytes = 32;
+        unsigned int readSize = 0;
+        char* buffer = str;
+        do {
+            readSize = fread(buffer, 1, chunkSizeBytes, f);
+
+            if(buffer - str + chunkSizeBytes > RESPONSE_BUFFER_SIZE) {
+                printf("File too long.");
+                break;
+            }
+
+            buffer = buffer + chunkSizeBytes;
+
+        } while(readSize == chunkSizeBytes);
+
+        *buffer = 0;
+
+        fclose(f);
+
+        return str;
     }
 
     return str;
@@ -101,6 +135,31 @@ void app_main(void)
 
     hysteresis_init();
     hysteresis_set_target(23);
+
+
+    printf("Initializing SPIFFS");
+
+    esp_vfs_spiffs_conf_t conf = {
+      .base_path = "/spiffs",
+      .partition_label = NULL,
+      .max_files = 5,
+      .format_if_mount_failed = true
+    };
+
+    // Use settings defined above to initialize and mount SPIFFS filesystem.
+    // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
+    ret = esp_vfs_spiffs_register(&conf);
+
+    if (ret != ESP_OK) {
+        if (ret == ESP_FAIL) {
+            printf("Failed to mount or format filesystem");
+        } else if (ret == ESP_ERR_NOT_FOUND) {
+            printf("Failed to find SPIFFS partition");
+        } else {
+            printf("Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+        }
+        return;
+    }
 
     bool heat;
     while(true) {
