@@ -1,7 +1,6 @@
 /* Thermostat Connecté
 Author: Amaury Graillat */
 
-#include <time.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "sdkconfig.h"
@@ -26,6 +25,7 @@ Author: Amaury Graillat */
 #include "network/wifi/wifi.h" 
 #include "network/http/http.h"
 
+#include "controller/configuration/storage.h"
 #include "controller/configuration/handlers.h"
 #include "controller/hysteresis/hysteresis.h"
 
@@ -96,15 +96,18 @@ void app_main(void)
     while(true) {
         double tmp = tmp175_alt_get_temp();
 
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        printf("%ld\n", ts.tv_sec);
-
         hysteresis_step(tmp, &heat);
 
         // led_set_level(THERMOSTAT_RELAY_GPIO, heat);
 
         printf("%f : %s\n", tmp, (heat?"HEAT":"NO"));
+
+        unsigned int hour;
+        unsigned int minute;
+        unsigned int day;
+        get_current_time(&hour, &minute, &day);
+
+        printf("%2d:%2d day=%d\n", hour, minute, day);
     }
 
     fflush(stdout);

@@ -6,10 +6,20 @@
 #include "../../device/TMP175_alt/tmp175.h"
 
 #include "../../controller/hysteresis/hysteresis.h"
+#include "../../controller/configuration/storage.h"
+
 #include "../../config.h"
 
 void http_post_handler_time_date(const char* uri, const char* data)
 {
+    printf("POST %s : %s\n", uri, data);
+
+    int hour, minute, day;
+    sscanf( data, "hour=%d&minute=%d&day=%d", &hour, &minute, &day );
+
+    printf("SET hour=%d, minute=%d, day=%d\n", hour, minute, day);
+
+    set_current_time(hour, minute, day);
 }
 
 void http_post_handler_temperature(const char* uri, const char* data)
@@ -35,7 +45,7 @@ void pushbutton_red_handler(void * args)
     relay_off(THERMOSTAT_RELAY_GPIO);
 }
 
-#define RESPONSE_BUFFER_SIZE 512
+#define RESPONSE_BUFFER_SIZE 2048
 char str[RESPONSE_BUFFER_SIZE];
 const char* http_get_handler(const char* uri)
 {
