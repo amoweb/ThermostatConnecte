@@ -1,6 +1,7 @@
 /* Thermostat Connecté
 Author: Amaury Graillat */
 
+#include <time.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "sdkconfig.h"
@@ -25,81 +26,10 @@ Author: Amaury Graillat */
 #include "network/wifi/wifi.h" 
 #include "network/http/http.h"
 
+#include "controller/configuration/handlers.h"
 #include "controller/hysteresis/hysteresis.h"
 
 #include "config.h"
-
-#define RESPONSE_BUFFER_SIZE 512
-char str[RESPONSE_BUFFER_SIZE];
-const char* http_get_handler(const char* uri)
-{
-    printf("Request page [%s]\n", uri);
-
-    if(strcmp(uri, "/temp") == 0) {
-        double tmp = tmp175_alt_get_temp();
-        sprintf(str, "%f\n", tmp);
-
-    } else if(strcmp(uri, "/") == 0) {
-
-        // TODO on pourrait optimiser ici en évitant de tout charger en mémoire
-        // avant d'envoyer. Mais plutôt créer un handler pour le GET qui fait
-        // les lectures et les sends en même temps.
-
-        // Open for reading hello.txt
-        FILE* f = fopen("/spiffs/index.html", "r");
-
-        if (f == NULL) {
-            return "ERROR failed to open file.";
-        }
-
-        // Read file
-        const unsigned int chunkSizeBytes = 32;
-        unsigned int readSize = 0;
-        char* buffer = str;
-        do {
-            readSize = fread(buffer, 1, chunkSizeBytes, f);
-
-            if(buffer - str + chunkSizeBytes > RESPONSE_BUFFER_SIZE) {
-                printf("File too long.");
-                break;
-            }
-
-            buffer = buffer + chunkSizeBytes;
-
-        } while(readSize == chunkSizeBytes);
-
-        *buffer = 0;
-
-        fclose(f);
-
-        return str;
-    }
-
-    return str;
-}
-
-void http_post_handler(const char* uri, const char* data)
-{
-    printf("POST %s : %s\n", uri, data);
-
-    double target_temperature = strtod(&data[14], NULL);
-
-    printf("Target temperature : %f\n", target_temperature);
-
-    hysteresis_set_target(target_temperature);
-}
-
-void pushbutton_black_handler(void * args)
-{
-    led_on(THERMOSTAT_LED_GPIO);
-    relay_on(THERMOSTAT_RELAY_GPIO);
-}
-
-void pushbutton_red_handler(void * args)
-{
-    led_off(THERMOSTAT_LED_GPIO);
-    relay_off(THERMOSTAT_RELAY_GPIO);
-}
 
 void app_main(void)
 {
@@ -126,7 +56,8 @@ void app_main(void)
 
     register_get_endpoint(server, "/", http_get_handler);
     register_get_endpoint(server, "/temp", http_get_handler);
-    register_post_endpoint(server, "/", http_post_handler);
+    register_post_endpoint(server, "/temp", http_post_handler_temperature);
+    register_post_endpoint(server, "/time", http_post_handler_time_date);
 
     LM35_init_adc1(THERMOSTAT_LM35_ADC);
 
@@ -164,6 +95,10 @@ void app_main(void)
     bool heat;
     while(true) {
         double tmp = tmp175_alt_get_temp();
+
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        printf("%ld\n", ts.tv_sec);
 
         hysteresis_step(tmp, &heat);
 

@@ -1,15 +1,34 @@
 <html lang="fr">
     <head>
-        <meta charset="utf-7" />     
+        <meta charset="utf-8" />
         <title>Thermostat</title> 
     </head>
     <body>
-        Version SPIFFS.
+        <h1>Température</h1>
 
-        <form action="/" method="post" >     
+        <form action="/temp" method="post" >
             <label for="tmptargetname">Consigne temperature :</label><br>     
             <input type="text" id="tmptargetname" name="tmptargetname" value="19.5"><br><br>          
             <input type="submit" value="OK">   
-        </form>   
+        </form> 
+
+        <h1>Heure et date</h1>
+        <form action="/time" method="post" >
+            <input type="number" id="hour" name="hour" value="10" />:
+            <input type="number" id="minute" name="hour" value="15" />
+            <br /><br />
+            <select name="day">
+                <option value="1">Lundi</option>
+                <option value="2">Mardi</option>
+                <option value="3">Mercredi</option>
+                <option value="4">Jeudi</option>
+                <option value="5">Vendredi</option>
+                <option value="6">Samedi</option>
+                <option value="7">Dimanche</option>
+            </select>
+            <br /><br />
+            <input type="submit" value="OK" />
+        </form>
     </body>
 </html>
+
