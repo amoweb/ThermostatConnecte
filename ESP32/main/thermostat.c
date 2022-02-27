@@ -98,7 +98,7 @@ void app_main(void)
 
         hysteresis_step(tmp, &heat);
 
-        // led_set_level(THERMOSTAT_RELAY_GPIO, heat);
+        led_set_level(THERMOSTAT_RELAY_GPIO, heat);
 
         printf("%f : %s\n", tmp, (heat?"HEAT":"NO"));
 

@@ -6,7 +6,7 @@ void relay_init(gpio_num_t port)
 {
     gpio_config_t io_conf = {};
     io_conf.pin_bit_mask = (1ULL<<port);
-    io_conf.mode = GPIO_MODE_OUTPUT_OD;
+    io_conf.mode = GPIO_MODE_OUTPUT;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.intr_type = GPIO_INTR_DISABLE;

@@ -36,13 +36,13 @@ void http_post_handler_temperature(const char* uri, const char* data)
 void pushbutton_black_handler(void * args)
 {
     led_on(THERMOSTAT_LED_GPIO);
-    relay_on(THERMOSTAT_RELAY_GPIO);
+    // relay_on(THERMOSTAT_RELAY_GPIO);
 }
 
 void pushbutton_red_handler(void * args)
 {
     led_off(THERMOSTAT_LED_GPIO);
-    relay_off(THERMOSTAT_RELAY_GPIO);
+    // relay_off(THERMOSTAT_RELAY_GPIO);
 }
 
 #define RESPONSE_BUFFER_SIZE 2048
