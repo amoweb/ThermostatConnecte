@@ -7,9 +7,15 @@ void hysteresis_init();
 
 /*
  * Define the target temperature.
- * @param[in] target_temperature
+ * @param[in] target_temperature °C
  */
 void hysteresis_set_target(double target_temperature);
+
+/*
+ * Get the target temperature.
+ * @return target_temperature °C
+ */
+double hysteresis_get_target();
 
 /*
  * Define the low and high threshold. Low hystersis threshold is

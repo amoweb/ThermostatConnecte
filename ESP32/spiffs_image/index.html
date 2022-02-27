@@ -1,14 +1,20 @@
+<!doctype html>
 <html lang="fr">
     <head>
         <meta charset="utf-8" />
         <title>Thermostat</title> 
     </head>
     <body>
+
+        http://192.168.0.22/temp
+
         <h1>Température</h1>
 
-        <form action="/temp" method="post" >
+        <div id="currentTemperature"></div>
+
+        <form action="/target" method="post" >
             <label for="tmptargetname">Consigne temperature :</label><br>     
-            <input type="text" id="tmptargetname" name="tmptargetname" value="19.5"><br><br>          
+            <input type="text" id="tmptargetname" name="tmptargetname" value=""><br><br>          
             <input type="submit" value="OK">   
         </form> 
 
@@ -29,6 +35,28 @@
             <br /><br />
             <input type="submit" value="OK" />
         </form>
+        <script type="text/javascript">
+
+            const Http = new XMLHttpRequest();
+            Http.open("GET", "/target");
+            Http.onload = (e) => {
+                var e = document.getElementById("tmptargetname");
+                e.value = Http.responseText;
+            }
+            Http.send();
+
+            function update() {
+                const Http = new XMLHttpRequest();
+                Http.open("GET", "/temp");
+                Http.onload = (e) => {
+                    var e = document.getElementById("currentTemperature");
+                    e.innerHTML = "Actuelle : " + Http.responseText + "°C";
+                }
+                Http.send();
+            }
+
+            setInterval(update, 1000);
+        </script>
     </body>
 </html>
 

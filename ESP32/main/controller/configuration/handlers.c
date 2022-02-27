@@ -55,6 +55,10 @@ const char* http_get_handler(const char* uri)
         double tmp = tmp175_alt_get_temp();
         sprintf(str, "%f\n", tmp);
 
+    } else if(strcmp(uri, "/target") == 0) {
+        double tmp = hysteresis_get_target();
+        sprintf(str, "%f\n", tmp);
+
     } else if(strcmp(uri, "/") == 0) {
 
         // TODO on pourrait optimiser ici en évitant de tout charger en mémoire

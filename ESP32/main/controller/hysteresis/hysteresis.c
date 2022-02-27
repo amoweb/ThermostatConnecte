@@ -22,6 +22,11 @@ void hysteresis_set_target(double target_temperature)
     h_.target_temperature = target_temperature;
 }
 
+double hysteresis_get_target()
+{
+    return h_.target_temperature;
+}
+
 void hysteresis_set_thresholds(double low_threshold, double high_threshold)
 {
     h_.low_threshold = low_threshold;
