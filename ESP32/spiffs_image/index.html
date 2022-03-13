@@ -5,42 +5,134 @@
         <title>Thermostat</title> 
     </head>
     <body>
-
-        http://192.168.0.22/temp
-
         <h1>Température</h1>
 
-        <div id="currentTemperature"></div>
+        <form action="/target" method="post" >
+            <label for="tmptargetname">Chauffer immédiatement&nbsp;</label><input type="text" size="6" name="tmptargetname" value="20"><input type="submit" value="Chauffer">
+        </form> 
+        
 
         <form action="/target" method="post" >
-            <label for="tmptargetname">Consigne temperature :</label><br>     
-            <input type="text" id="tmptargetname" name="tmptargetname" value=""><br><br>          
-            <input type="submit" value="OK">   
+            <label for="tmptargetname">Présence&nbsp;</label><input type="text" size="6" name="tmptargetname" value="19"><br />
+            <label for="tmptargetname">Absence&nbsp;</label><input type="text" size="6" name="tmptargetname" value="17"><br />
+            <input type="submit" value="OK">
         </form> 
 
-        <h1>Heure et date</h1>
+        <h1>Heure date</h1>
         <form action="/time" method="post" >
-            <input type="number" id="hour" name="hour" value="10" />:
-            <input type="number" id="minute" name="minute" value="15" />
-            <br /><br />
             <select name="day">
-                <option value="0">Lundi</option>
-                <option value="1">Mardi</option>
-                <option value="2">Mercredi</option>
-                <option value="3">Jeudi</option>
-                <option value="4">Vendredi</option>
-                <option value="5">Samedi</option>
-                <option value="6">Dimanche</option>
+                <option value="0">Lun</option>
+                <option value="1">Mar</option>
+                <option value="2">Mer</option>
+                <option value="3">Jeu</option>
+                <option value="4">Ven</option>
+                <option value="5">Sam</option>
+                <option value="6">Dim</option>
             </select>
-            <br /><br />
+            &nbsp;
+            <input type="number" size="3" id="hour" name="hour" value="10" />:
+            <input type="number" size="3" id="minute" name="minute" value="15" />
+            &nbsp;
             <input type="submit" value="OK" />
         </form>
+
+        <h1>Présence</h1>
+        <form action="/presence" method="post" >
+        <table>
+            <tr>
+                <th></th>
+                <th>Présence 1</th>
+                <th>Présence 2</th>
+            </tr>
+            <tr>
+                <td>Lun</td>
+                <td>
+                <input type="number" size="3" name="h0a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h0b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h0c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h0d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr>
+            <tr>
+                <td>Mar</td>
+                <td>
+                <input type="number" size="3" name="h1a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h1b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h1c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h1d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr>
+            <tr>
+                <td>Mer</td>
+                <td>
+                <input type="number" size="3" name="h2a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h2b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h2c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h2d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr><tr>
+                <td>Jeu</td>
+                <td>
+                <input type="number" size="3" name="h3a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h3b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h3c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h3d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr><tr>
+                <td>Ven</td>
+                <td>
+                <input type="number" size="3" name="h4a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h4b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h4c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h4d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr><tr>
+                <td>Sam</td>
+                <td>
+                <input type="number" size="3" name="h5a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h5b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h5c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h5d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr><tr>
+                <td>Dim</td>
+                <td>
+                <input type="number" size="3" name="h6a" value="7" />:<input type="number" size="3" name="m0a" value="00" />  -  
+                <input type="number" size="3" name="h6b" value="8" />:<input type="number" size="3" name="m0b" value="30" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h6c" value="18" />:<input type="number" size="3" name="m0c" value="00" />  -  
+                <input type="number" size="3" name="h6d" value="22" />:<input type="number" size="3" name="m0d" value="00" />
+                </td>
+            </tr>
+        </table>
+        <input type="submit" value="OK" />
+
         <script type="text/javascript">
 
             const Http = new XMLHttpRequest();
             Http.open("GET", "/target");
             Http.onload = (e) => {
-                var e = document.getElementById("tmptargetname");
+                var e = document.getElementByName("tmptargetname");
                 e.value = Http.responseText;
             }
             Http.send();

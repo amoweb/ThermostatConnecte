@@ -59,6 +59,7 @@ void app_main(void)
     register_get_endpoint(server, "/target", http_get_handler);
     register_post_endpoint(server, "/target", http_post_handler_temperature);
     register_post_endpoint(server, "/time", http_post_handler_time_date);
+    register_post_endpoint(server, "/presence", http_post_handler_presence);
 
     LM35_init_adc1(THERMOSTAT_LM35_ADC);
 

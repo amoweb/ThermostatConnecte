@@ -33,6 +33,14 @@ void http_post_handler_temperature(const char* uri, const char* data)
     hysteresis_set_target(target_temperature);
 }
 
+void http_post_handler_presence(const char* uri, const char* data)
+{
+    printf("POST %s : %s\n", uri, data);
+
+    set_presence_array_from_string(data);
+    print_presence_array();
+}
+
 void pushbutton_black_handler(void * args)
 {
     led_on(THERMOSTAT_LED_GPIO);
@@ -45,7 +53,7 @@ void pushbutton_red_handler(void * args)
     // relay_off(THERMOSTAT_RELAY_GPIO);
 }
 
-#define RESPONSE_BUFFER_SIZE 2048
+#define RESPONSE_BUFFER_SIZE (2*4096)
 char str[RESPONSE_BUFFER_SIZE];
 const char* http_get_handler(const char* uri)
 {

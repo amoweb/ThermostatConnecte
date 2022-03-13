@@ -13,8 +13,8 @@ void hysteresis_init()
 {
     h_.heat = false;
     h_.target_temperature = 17;
-    h_.low_threshold = 0.25;
-    h_.high_threshold = 0.25;
+    h_.low_threshold = 0.4;
+    h_.high_threshold = 0.3;
 }
 
 void hysteresis_set_target(double target_temperature)
