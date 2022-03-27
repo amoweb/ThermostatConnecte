@@ -15,7 +15,10 @@ void http_post_handler_time_date(const char* uri, const char* data)
     printf("POST %s : %s\n", uri, data);
 
     int hour, minute, day;
-    sscanf( data, "hour=%d&minute=%d&day=%d", &hour, &minute, &day );
+
+    const char* string = strstr(data, "day=");
+
+    sscanf(string, "day=%d&hour=%d&minute=%d", &day, &hour, &minute);
 
     printf("SET hour=%d, minute=%d, day=%d\n", hour, minute, day);
 

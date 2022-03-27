@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "storage.h"
 
-static time_t timestamp_offset = 0;
-static time_t initial_time = 0;
+static time_t timestamp_offset_seconds = 0;
+static time_t initial_time_seconds = 0;
 
 presence_s presence_array[7][2];
 
@@ -18,7 +18,8 @@ void init_presence_array() {
     }
 }
 
-void print_presence_array() {
+void print_presence_array()
+{
     for(unsigned int d=0; d<7; d++) {
         for(unsigned int i=0; i<2; i++) {
             printf("Day %d %d/2 : %d:%d - %d:%d\n",
@@ -33,7 +34,8 @@ void print_presence_array() {
     }
 }
 
-void set_presence_array_from_string(const char* data) {
+void set_presence_array_from_string(const char* data)
+{
     char* p = (char*)&data[4];
 
     for(unsigned int d=0; d<7; d++) {
@@ -59,7 +61,7 @@ void get_current_time(unsigned int* hour, unsigned int* minute, unsigned int* da
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); // time from boot
 
-    time_t timestamp = ts.tv_sec - timestamp_offset + initial_time;
+    time_t timestamp = ts.tv_sec - timestamp_offset_seconds + initial_time_seconds;
 
     *day = (timestamp % (7*24*60*60)) / (24 * 60 * 60);
 
@@ -77,7 +79,7 @@ void set_current_time(unsigned int hour, unsigned int minute, unsigned int day)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); // time from boot
 
-    initial_time = (((day*24) + hour) * 60 + minute) * 60;
-    timestamp_offset = ts.tv_sec;
+    initial_time_seconds = (((day*24) + hour) * 60 + minute) * 60;
+    timestamp_offset_seconds = ts.tv_sec;
 }
 
