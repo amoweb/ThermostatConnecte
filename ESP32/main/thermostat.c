@@ -70,6 +70,7 @@ void app_main(void)
     hysteresis_init();
     hysteresis_set_target(18);
 
+    prediction_init();
 
     printf("Initializing SPIFFS");
 
@@ -108,7 +109,9 @@ void app_main(void)
         struct time t;
         get_current_time(&t);
 
-        printf("%2d:%2d day=%d\n", hour, minute, day);
+        prediction_step(tmp, heat, t);
+
+        printf("%2d:%2d day=%d\n", t.hour, t.minute, t.day);
     }
 
     fflush(stdout);
