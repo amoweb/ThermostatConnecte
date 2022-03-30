@@ -93,3 +93,45 @@ bool time_equals(struct time t1, struct time t2)
     return ( t1.day==t2.day && t1.hour==t2.hour && t1.minute==t2.minute );
 }
 
+struct time presence_get_next_start(struct time currentTime)
+{
+    unsigned int tcurrent = currentTime.hour*60 + currentTime.minute;
+
+    // Limitation: only works if presence_array[day] is sorted.
+    for(int i = 0; i < 2; i++) {
+        presence_s p = presence_array[currentTime.day][i];
+        unsigned int tpresence = p.start_hour*60 + p.start_minute;
+
+        if(tpresence > tcurrent) {
+            currentTime.hour = p.start_hour;
+            currentTime.minute = p.start_minute;
+
+            return currentTime;
+        }
+    }
+
+    currentTime.hour = 99;
+    return currentTime;
+}
+
+struct time presence_get_next_end(struct time currentTime) 
+{
+    unsigned int tcurrent = currentTime.hour*60 + currentTime.minute;
+
+    // Limitation: only works if presence_array[day] is sorted.
+    for(int i = 0; i < 2; i++) {
+        presence_s p = presence_array[currentTime.day][i];
+        unsigned int tpresence = p.end_hour*60 + p.end_hour;
+
+        if(tpresence > tcurrent) {
+            currentTime.hour = p.end_hour;
+            currentTime.minute = p.end_hour;
+
+            return currentTime;
+        }
+    }
+
+    currentTime.hour = 99;
+    return currentTime;
+}
+

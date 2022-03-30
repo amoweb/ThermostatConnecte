@@ -38,5 +38,19 @@ typedef struct presence {
     unsigned int end_minute;
 } presence_s;
 
+/**
+ Get the next presence start
+ @param[in] currentTime
+ @return time (hour is 99 if nothing is found)
+ **/
+struct time presence_get_next_start(struct time currentTime);
+
+/**
+ Get the next presence end
+ @param[in] currentTime
+ @return time (hour is 99 if nothing is found)
+ **/
+struct time presence_get_next_end(struct time currentTime);
+
 presence_s presence_array[7][2];
 
