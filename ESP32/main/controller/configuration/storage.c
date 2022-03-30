@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "storage.h"
+#include <stdbool.h>
 
 static time_t timestamp_offset_seconds = 0;
 static time_t initial_time_seconds = 0;
@@ -56,30 +57,39 @@ void set_presence_array_from_string(const char* data)
     }
 }
 
-void get_current_time(unsigned int* hour, unsigned int* minute, unsigned int* day)
+struct time get_current_time()
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); // time from boot
 
     time_t timestamp = ts.tv_sec - timestamp_offset_seconds + initial_time_seconds;
 
-    *day = (timestamp % (7*24*60*60)) / (24 * 60 * 60);
+    struct time t;
+    t.day = (timestamp % (7*24*60*60)) / (24 * 60 * 60);
 
-    time_t rem = timestamp - (*day * 24 * 60 * 60);
+    time_t rem = timestamp - (t.day * 24 * 60 * 60);
 
-    *hour = rem / (60 * 60);
+    t.hour = rem / (60 * 60);
 
-    rem = rem - (*hour * 60 * 60);
+    rem = rem - (t.hour * 60 * 60);
 
-    *minute = rem / 60;
+    t.minute = rem / 60;
+    
+    return t;
 }
 
-void set_current_time(unsigned int hour, unsigned int minute, unsigned int day)
+void set_current_time(struct time t)
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); // time from boot
 
-    initial_time_seconds = (((day*24) + hour) * 60 + minute) * 60;
+    initial_time_seconds = (((t.day*24) + t.hour) * 60 + t.minute) * 60;
     timestamp_offset_seconds = ts.tv_sec;
+}
+
+// Limitation:  only works when comparing two times of the same week.
+bool time_equals(struct time t1, struct time t2)
+{
+    return ( t1.day==t2.day && t1.hour==t2.hour && t1.minute==t2.minute );
 }
 

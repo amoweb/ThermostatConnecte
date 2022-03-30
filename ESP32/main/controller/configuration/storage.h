@@ -1,20 +1,31 @@
 #pragma once
 
+#include <stdbool.h>
+
+struct time {
+    unsigned int hour;   // hour in [0, 23]
+    unsigned int minute; // minute in [0, 60]
+    unsigned int day;    // day in [0, 6] for Monday - Sunday
+};
+
 /**
   * Get the current time (hour, minute, day)
-  * @param[out] hour in [0, 23]
-  * @param[out] minute in [0, 60]
-  * @param[out] day in [0, 6] for Monday - Sunday
+  * @return struct time
   */
-void get_current_time(unsigned int* hour, unsigned int* minute, unsigned int* day);
+struct time get_current_time();
 
 /**
   * Set the current time (hour, minute, day)
-  * @param[in] hour in [0, 23]
-  * @param[in] minute in [0, 60]
-  * @param[in] day in [0, 6] for Monday - Sunday
+  * @param[in] struct time
   */
-void set_current_time(unsigned int hour, unsigned int minute, unsigned int day);
+void set_current_time(struct time t);
+
+/**
+  * Returns true when time1 == time 2.
+  * Limitation: times (day, h, m, s) must be of the same week
+  * return bool
+  */
+bool time_equals(struct time t1, struct time t2);
 
 void init_presence_array();
 void print_presence_array();
@@ -28,5 +39,4 @@ typedef struct presence {
 } presence_s;
 
 presence_s presence_array[7][2];
-
 

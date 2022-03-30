@@ -28,6 +28,7 @@ Author: Amaury Graillat */
 #include "controller/configuration/storage.h"
 #include "controller/configuration/handlers.h"
 #include "controller/hysteresis/hysteresis.h"
+#include "controller/prediction/prediction.h"
 
 #include "config.h"
 
@@ -104,10 +105,8 @@ void app_main(void)
 
         printf("%f : %s\n", tmp, (heat?"HEAT":"NO"));
 
-        unsigned int hour;
-        unsigned int minute;
-        unsigned int day;
-        get_current_time(&hour, &minute, &day);
+        struct time t;
+        get_current_time(&t);
 
         printf("%2d:%2d day=%d\n", hour, minute, day);
     }
