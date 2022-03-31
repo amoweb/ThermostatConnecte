@@ -93,6 +93,80 @@ bool time_equals(struct time t1, struct time t2)
     return ( t1.day==t2.day && t1.hour==t2.hour && t1.minute==t2.minute );
 }
 
+unsigned int time_duration_minute(struct time t1, struct time t2)
+{
+    /*
+       Exemple:
+       t1_minutes = ((4*24) + 7)*60 + 0 = 6180 = Jeudi à 7h00
+       t2_minutes = ((2*24) + 7)*60 + 0 = 3300 = Mardi à 7h00
+       diff_minutes = (3300 + 10080) - 6180 = 7200
+       diff_jours = 7200/(24*60) = 5 jours
+       OK
+     */
+
+    unsigned int t1_minutes = ((t1.day*24) + t1.hour)*60 + t1.minute;
+    unsigned int t2_minutes = ((t2.day*24) + t2.hour)*60 + t2.minute;
+
+    unsigned int diff_minutes;
+
+    // Easy case
+    if(t1_minutes < t2_minutes) {
+        diff_minutes = t2_minutes - t1_minutes;
+    } else if(t1_minutes == t2_minutes) {
+        diff_minutes = 0;
+    } else {
+        diff_minutes = (t2_minutes + 7*24*60) - t1_minutes;
+    }
+
+    return diff_minutes;
+}
+
+struct time time_duration(struct time t1, struct time t2)
+{
+    unsigned int diff_minutes = time_duration_minute(t1, t2);
+
+    struct time diff;
+
+    diff.day = diff_minutes / (24*60);
+    diff_minutes = diff_minutes - 24*60*diff.day;
+    diff.hour = diff_minutes / 60;
+    diff_minutes = diff_minutes - 60*diff.hour;
+    diff.minute = diff_minutes;
+
+    return diff;
+}
+
+void time_test()
+{
+    struct time t1;
+    struct time t2;
+    struct time diff;
+
+    // Test 1
+    t1.day = 1; t1.hour = 1; t1.minute = 1;
+    t2.day = 2; t2.hour = 2; t2.minute = 2;
+    diff = time_duration(t1, t2);
+
+    if(diff.day != 1 || diff.hour != 1 || diff.minute != 1) {
+        printf("FAIL 1\n");
+        while(true)
+            ;
+    }
+
+    // Test 2
+    t1.day = 1; t1.hour = 1; t1.minute = 1;
+    t2.day = 2; t2.hour = 2; t2.minute = 3;
+    diff = time_duration(t1, t2);
+
+    if(diff.day != 1 || diff.hour != 1 || diff.minute != 2) {
+        printf("FAIL 2\n");
+        while(true)
+            ;
+    }
+
+    printf("Tests OK\n");
+}
+
 struct time presence_get_next_start(struct time currentTime)
 {
     unsigned int tcurrent = currentTime.hour*60 + currentTime.minute;

@@ -27,6 +27,22 @@ void set_current_time(struct time t);
   */
 bool time_equals(struct time t1, struct time t2);
 
+/**
+  * Computation duration from t1 to t2.
+  * Returns: (t2 - t1)
+  * Limitation: difference can't be more than 7 days
+  **/
+struct time time_duration(struct time t1, struct time t2);
+
+/**
+  * Computation duration from t1 to t2.
+  * Returns: (t2 - t1)
+  * Limitation: difference can't be more than 7 days
+  **/
+unsigned int time_duration_minute(struct time t1, struct time t2);
+
+void time_test();
+
 void init_presence_array();
 void print_presence_array();
 void set_presence_array_from_string(const char* data);

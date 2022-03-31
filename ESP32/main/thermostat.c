@@ -28,7 +28,7 @@ Author: Amaury Graillat */
 #include "controller/configuration/storage.h"
 #include "controller/configuration/handlers.h"
 #include "controller/hysteresis/hysteresis.h"
-#include "controller/prediction/prediction.h"
+#include "controller/estimator/estimator.h"
 
 #include "config.h"
 
@@ -70,9 +70,20 @@ void app_main(void)
     hysteresis_init();
     hysteresis_set_target(18);
 
-    prediction_init();
+    // Init time
+    struct time initTime;
+    initTime.day = 0;
+    initTime.hour = 0;
+    initTime.minute = 0;
+    set_current_time(initTime);
 
-    printf("Initializing SPIFFS");
+    // Tests
+    time_test();
+    estimator_test();
+
+    estimator_init();
+
+    printf("Initializing SPIFFS\n");
 
     esp_vfs_spiffs_conf_t conf = {
       .base_path = "/spiffs",
@@ -98,19 +109,21 @@ void app_main(void)
 
     bool heat;
     while(true) {
-        double tmp = tmp175_alt_get_temp();
+        double temperature = tmp175_alt_get_temp();
 
-        hysteresis_step(tmp, &heat);
+        hysteresis_step(temperature, &heat);
 
         led_set_level(THERMOSTAT_RELAY_GPIO, heat);
 
-        printf("%f : %s\n", tmp, (heat?"HEAT":"NO"));
+        printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 
         struct time t;
         get_current_time(&t);
 
-        prediction_step(tmp, heat, t);
+        estimator_step(temperature, heat, t);
+        double slope = estimator_get_slope();
 
+        printf("%.2f degrees/hour\n", slope);
         printf("%2d:%2d day=%d\n", t.hour, t.minute, t.day);
     }
 
