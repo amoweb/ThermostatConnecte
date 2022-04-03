@@ -70,3 +70,4 @@ struct time presence_get_next_end(struct time currentTime);
 
 presence_s presence_array[7][2];
 
+void test_time();

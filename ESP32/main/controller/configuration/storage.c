@@ -209,3 +209,24 @@ struct time presence_get_next_end(struct time currentTime)
     return currentTime;
 }
 
+
+void test_time()
+{
+    struct time t1;
+    t1.hour = 3;
+    t1.minute = 4;
+    t1.day = 5;
+    set_current_time(t1);
+
+    struct time t2 = get_current_time();
+
+    if(t1.hour != t2.hour || t1.minute != t2.minute || t1.day != t2.day) {
+        printf("test_time: ERROR\n");
+        printf("t1 = %2d:%2d day=%d\n", t1.hour, t1.minute, t1.day);
+        printf("t2 = %2d:%2d day=%d\n", t2.hour, t2.minute, t2.day);
+        while(true)
+            ;
+    }
+
+    printf("test_time OK\n");
+}

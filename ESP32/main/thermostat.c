@@ -70,6 +70,8 @@ void app_main(void)
     hysteresis_init();
     hysteresis_set_target(18);
 
+    test_time();
+
     // Init time
     struct time initTime;
     initTime.day = 0;
@@ -107,6 +109,7 @@ void app_main(void)
         return;
     }
 
+    struct time t;
     bool heat;
     while(true) {
         double temperature = tmp175_alt_get_temp();
@@ -117,7 +120,6 @@ void app_main(void)
 
         printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 
-        struct time t;
         get_current_time(&t);
 
         estimator_step(temperature, heat, t);
