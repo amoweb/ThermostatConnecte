@@ -7,14 +7,16 @@
     <body>
         <h1>Température</h1>
 
-        <form action="/target" method="post" >
-            <label for="tmptargetname">Chauffer immédiatement&nbsp;</label><input type="text" size="6" name="tmptargetname" value="20"><input type="submit" value="Chauffer">
+        <div id="currentTemperature"></div><br />
+
+        <form action="/heat" method="post" >
+            <label for="tmptargetname">Chauffer immédiatement&nbsp;</label><input type="text" size="6" name="tmptargetname" value=""><input type="submit" value="Chauffer">
         </form> 
         
 
         <form action="/target" method="post" >
-            <label for="tmptargetname">Présence&nbsp;</label><input type="text" size="6" name="tmptargetname" value="19"><br />
-            <label for="tmptargetname">Absence&nbsp;</label><input type="text" size="6" name="tmptargetname" value="17"><br />
+            <label for="tmptargetpresencename">Présence&nbsp;</label><input type="text" size="6" name="tmptargetpresencename" value=""><br />
+            <label for="tmptargetabsencename">Absence&nbsp;</label><input type="text" size="6" name="tmptargetabsencename" value=""><br />
             <input type="submit" value="OK">
         </form> 
 
@@ -129,20 +131,30 @@
 
         <script type="text/javascript">
 
-            const Http = new XMLHttpRequest();
-            Http.open("GET", "/target");
-            Http.onload = (e) => {
-                var e = document.getElementByName("tmptargetname");
-                e.value = Http.responseText;
+            var endpoint = {
+                tmptargetname: "/target",
+                tmptargetpresencename: "/target_presence",
+                tmptargetabsencename: "/target_absence"
+            };
+
+            for (var v in endpoint) {
+                const Http = new XMLHttpRequest();
+                Http.open("GET", endpoint[v]);
+                Http.onload = (e) => {
+                    var e = document.getElementsByTagName(v);
+                    e.value = Http.responseText;
+                    console.log("Set value");
+                    console.log(e.value);
+                }
+                Http.send();
             }
-            Http.send();
 
             function update() {
                 const Http = new XMLHttpRequest();
                 Http.open("GET", "/temp");
                 Http.onload = (e) => {
                     var e = document.getElementById("currentTemperature");
-                    e.innerHTML = "Actuelle : " + Http.responseText + "°C";
+                    e.innerHTML = "Température actuelle : <b>" + Http.responseText + "°C</b>";
                 }
                 Http.send();
             }

@@ -33,8 +33,7 @@ static struct post_endpoint registered_function_post_endpoint[MAX_REGISTERED_ENP
 httpd_uri_t registered_post_endpoint[MAX_REGISTERED_ENPOINT];
 
 /* An HTTP GET handler */
-static esp_err_t http_get_handler(httpd_req_t *req)
-{
+static esp_err_t http_get_handler(httpd_req_t *req) {
     struct get_endpoint* f = (struct get_endpoint*)req->user_ctx;
     const char* resp_str = f->fun_ptr(f->uri);
 

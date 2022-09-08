@@ -58,6 +58,9 @@ void app_main(void)
     register_get_endpoint(server, "/", http_get_handler);
     register_get_endpoint(server, "/temp", http_get_handler);
     register_get_endpoint(server, "/target", http_get_handler);
+    register_get_endpoint(server, "/target_presence", http_get_handler);
+    register_get_endpoint(server, "/target_absence", http_get_handler);
+    register_post_endpoint(server, "/heat", http_post_handler_heat);
     register_post_endpoint(server, "/target", http_post_handler_temperature);
     register_post_endpoint(server, "/time", http_post_handler_time_date);
     register_post_endpoint(server, "/presence", http_post_handler_presence);
@@ -68,7 +71,7 @@ void app_main(void)
     pushbutton_register_handler(THERMOSTAT_PB_RED_GPIO, pushbutton_red_handler, NULL);
 
     hysteresis_init();
-    hysteresis_set_target(18);
+    hysteresis_set_target(17);
 
     test_time();
 

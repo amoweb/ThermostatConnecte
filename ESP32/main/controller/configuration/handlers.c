@@ -25,15 +25,32 @@ void http_post_handler_time_date(const char* uri, const char* data)
     set_current_time(t);
 }
 
-void http_post_handler_temperature(const char* uri, const char* data)
+void http_post_handler_heat(const char* uri, const char* data)
 {
+    // tmptargetname=20
     printf("POST %s : %s\n", uri, data);
 
     double target_temperature = strtod(&data[14], NULL);
 
-    printf("Target temperature : %f\n", target_temperature);
+    printf("Chauffe immédiate : %f\n", target_temperature);
 
     hysteresis_set_target(target_temperature);
+}
+
+void http_post_handler_temperature(const char* uri, const char* data)
+{
+    printf("POST %s : %s\n", uri, data);
+
+    // tmptargetpresencename=19&tmptargetabsencename=17
+
+    char* p = NULL;
+    double target_temperature_presence = strtod(&data[22], &p);
+    double target_temperature_absence = strtod(&p[22], &p);
+
+    printf("Consigne presence: %f\n", target_temperature_presence);
+    printf("Consigne absence: %f\n", target_temperature_absence);
+
+    set_temperature_target(target_temperature_presence, target_temperature_absence);
 }
 
 void http_post_handler_presence(const char* uri, const char* data)
@@ -70,6 +87,16 @@ const char* http_get_handler(const char* uri)
     } else if(strcmp(uri, "/target") == 0) {
         double tmp = hysteresis_get_target();
         sprintf(str, "%f\n", tmp);
+
+    } else if(strcmp(uri, "/target_presence") == 0) {
+        double presence = 0, absence = 0;
+        get_temperature_target(&presence, &absence);
+        sprintf(str, "%f\n", presence);
+
+    } else if(strcmp(uri, "/target_absence") == 0) {
+        double presence = 0, absence = 0;
+        get_temperature_target(&presence, &absence);
+        sprintf(str, "%f\n", absence);
 
     } else if(strcmp(uri, "/") == 0) {
 

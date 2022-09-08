@@ -1,5 +1,6 @@
 #pragma once
 
+void http_post_handler_heat(const char* uri, const char* data);
 void http_post_handler_temperature(const char* uri, const char* data);
 void http_post_handler_presence(const char* uri, const char* data);
 void http_post_handler_time_date(const char* uri, const char* data);

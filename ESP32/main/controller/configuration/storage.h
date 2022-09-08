@@ -2,6 +2,20 @@
 
 #include <stdbool.h>
 
+/**
+ * Store presence and absence temperature
+ * @param[in] presence
+ * @param[in] absence
+ */
+void set_temperature_target(double presence, double absence);
+
+/**
+ * Store presence and absence temperature
+ * @param[out] presence
+ * @param[out] absence
+ */
+void get_temperature_target(double* presence, double* absence);
+
 struct time {
     unsigned int hour;   // hour in [0, 23]
     unsigned int minute; // minute in [0, 60]

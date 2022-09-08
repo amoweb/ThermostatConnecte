@@ -5,6 +5,21 @@
 
 static time_t timestamp_offset_seconds = 0;
 static time_t initial_time_seconds = 0;
+static double target_temp_presence = 19;
+static double target_temp_absence = 17;
+
+void set_temperature_target(double presence, double absence)
+{
+    target_temp_presence = presence;
+    target_temp_absence = absence;
+}
+
+void get_temperature_target(double* presence, double* absence)
+{
+    *presence = target_temp_presence;
+    *absence = target_temp_absence;
+}
+
 
 presence_s presence_array[7][2];
 
@@ -59,6 +74,7 @@ void set_presence_array_from_string(const char* data)
 
 struct time get_current_time()
 {
+    printf("get_current_time\n");
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); // time from boot
 
@@ -80,6 +96,7 @@ struct time get_current_time()
 
 void set_current_time(struct time t)
 {
+    printf("set_current_time\n");
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); // time from boot
 
