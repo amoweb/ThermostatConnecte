@@ -113,7 +113,11 @@ static esp_err_t http_post_handler(httpd_req_t *req)
     f->fun_ptr(f->uri, fullBuf);
 
     // End response
-    httpd_resp_send_chunk(req, NULL, 0);
+    httpd_resp_set_status(req, "301 Moved Permanently");
+    httpd_resp_set_hdr(req, "Location", "/");
+    
+    char* resp_str = "";
+    httpd_resp_send(req, resp_str, strlen(resp_str));
     return ESP_OK;
 }
 
