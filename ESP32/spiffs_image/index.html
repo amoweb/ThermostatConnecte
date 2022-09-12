@@ -10,13 +10,13 @@
         <div id="currentTemperature"></div><br />
 
         <form action="/heat" method="post" >
-            <label for="tmptargetname">Chauffer immédiatement&nbsp;</label><input type="text" size="6" name="tmptargetname" value=""><input type="submit" value="Chauffer">
+            <label for="tmptargetname">Chauffer immédiatement&nbsp;</label><input type="text" size="6" id="tmptargetname" name="tmptargetname" value=""><input type="submit" value="Chauffer">
         </form> 
         
 
         <form action="/target" method="post" >
-            <label for="tmptargetpresencename">Présence&nbsp;</label><input type="text" size="6" name="tmptargetpresencename" value=""><br />
-            <label for="tmptargetabsencename">Absence&nbsp;</label><input type="text" size="6" name="tmptargetabsencename" value=""><br />
+            <label for="tmptargetpresencename">Présence&nbsp;</label><input type="text" size="6" id="tmptargetpresencename" name="tmptargetpresencename" value=""><br />
+            <label for="tmptargetabsencename">Absence&nbsp;</label><input type="text" size="6" id="tmptargetabsencename" name="tmptargetabsencename" value=""><br />
             <input type="submit" value="OK">
         </form> 
 
@@ -128,8 +128,19 @@
             </tr>
         </table>
         <input type="submit" value="OK" />
-
         <script type="text/javascript">
+
+            function updateField(id, e) {
+                console.log("req " + id);
+                var r = new XMLHttpRequest();
+                r.open("GET", e, true);
+                r.onreadystatechange = function () {
+                    console.log(id);
+                    if (r.readyState != 4 || r.status != 200) return;
+                    document.getElementById(id).value = r.responseText;
+                }
+                r.send();
+            }
 
             var endpoint = {
                 tmptargetname: "/target",
@@ -137,26 +148,18 @@
                 tmptargetabsencename: "/target_absence"
             };
 
-            for (var v in endpoint) {
-                const Http = new XMLHttpRequest();
-                Http.open("GET", endpoint[v]);
-                Http.onload = (e) => {
-                    var e = document.getElementsByTagName(v);
-                    e.value = Http.responseText;
-                    console.log("Set value");
-                    console.log(e.value);
-                }
-                Http.send();
+            for (var val in endpoint) {
+                updateField(val, endpoint[val]);
             }
 
             function update() {
-                const Http = new XMLHttpRequest();
-                Http.open("GET", "/temp");
-                Http.onload = (e) => {
+                var r = new XMLHttpRequest();
+                r.open("GET", "/temp");
+                r.onload = (e) => {
                     var e = document.getElementById("currentTemperature");
-                    e.innerHTML = "Température actuelle : <b>" + Http.responseText + "°C</b>";
+                    e.innerHTML = "Température actuelle : <b>" + r.responseText + "°C</b>";
                 }
-                Http.send();
+                r.send();
             }
 
             setInterval(update, 1000);

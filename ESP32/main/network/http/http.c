@@ -37,13 +37,14 @@ static esp_err_t http_get_handler(httpd_req_t *req) {
     struct get_endpoint* f = (struct get_endpoint*)req->user_ctx;
     const char* resp_str = f->fun_ptr(f->uri);
 
-    httpd_resp_send(req, resp_str, strlen(resp_str));
-
     /* After sending the HTTP response the old HTTP request
      * headers are lost. Check if HTTP request headers can be read now. */
     if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
         ESP_LOGI(TAG, "Request headers lost");
     }
+
+    httpd_resp_send(req, resp_str, strlen(resp_str));
+
     return ESP_OK;
 }
 

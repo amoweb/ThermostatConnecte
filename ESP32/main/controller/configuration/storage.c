@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "storage.h"
 #include <stdbool.h>
+#include <string.h>
 
 static time_t timestamp_offset_seconds = 0;
 static time_t initial_time_seconds = 0;

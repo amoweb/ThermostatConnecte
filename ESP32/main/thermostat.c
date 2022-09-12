@@ -60,6 +60,7 @@ void app_main(void)
     register_get_endpoint(server, "/target", http_get_handler);
     register_get_endpoint(server, "/target_presence", http_get_handler);
     register_get_endpoint(server, "/target_absence", http_get_handler);
+    register_get_endpoint(server, "/debug", http_get_handler);
     register_post_endpoint(server, "/heat", http_post_handler_heat);
     register_post_endpoint(server, "/target", http_post_handler_temperature);
     register_post_endpoint(server, "/time", http_post_handler_time_date);
@@ -128,8 +129,11 @@ void app_main(void)
         estimator_step(temperature, heat, t);
         double slope = estimator_get_slope();
 
-        printf("%.2f degrees/hour\n", slope);
-        printf("%2d:%2d day=%d\n", t.hour, t.minute, t.day);
+        printf("Slope: %.2f degrees/hour\n", slope);
+        printf("Current time: %2d:%2d day=%d\n", t.hour, t.minute, t.day);
+    
+        // struct time next_start = presence_get_next_start(t);
+        // printf("Next start: %2d:%2d day=%d\n", next_start.hour, next_start.minute, next_start.day);
     }
 
     fflush(stdout);

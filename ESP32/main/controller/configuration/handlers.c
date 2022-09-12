@@ -7,6 +7,7 @@
 
 #include "../../controller/hysteresis/hysteresis.h"
 #include "../../controller/configuration/storage.h"
+#include "../../controller/estimator/estimator.h"
 
 #include "../../config.h"
 
@@ -82,21 +83,36 @@ const char* http_get_handler(const char* uri)
 
     if(strcmp(uri, "/temp") == 0) {
         double tmp = tmp175_alt_get_temp();
-        sprintf(str, "%f\n", tmp);
+        sprintf(str, "%.2f\n", tmp);
 
     } else if(strcmp(uri, "/target") == 0) {
         double tmp = hysteresis_get_target();
-        sprintf(str, "%f\n", tmp);
+        sprintf(str, "%.2f\n", tmp);
 
     } else if(strcmp(uri, "/target_presence") == 0) {
         double presence = 0, absence = 0;
         get_temperature_target(&presence, &absence);
-        sprintf(str, "%f\n", presence);
+        sprintf(str, "%.2f\n", presence);
 
     } else if(strcmp(uri, "/target_absence") == 0) {
         double presence = 0, absence = 0;
         get_temperature_target(&presence, &absence);
-        sprintf(str, "%f\n", absence);
+        sprintf(str, "%.2f\n", absence);
+
+    } else if(strcmp(uri, "/debug") == 0) {
+        double temperature = tmp175_alt_get_temp();
+        double slope = estimator_get_slope();
+        struct time t;
+        get_current_time(&t);
+        struct time next_start = presence_get_next_start(t);
+
+        sprintf(str,
+            "Temperature: %.2f\nSlope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d\n",
+            temperature,
+            slope,
+            t.hour, t.minute, t.day,
+            next_start.hour, next_start.minute, next_start.day
+        );
 
     } else if(strcmp(uri, "/") == 0) {
 
