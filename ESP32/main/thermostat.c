@@ -32,6 +32,8 @@ Author: Amaury Graillat */
 
 #include "config.h"
 
+bool heat;
+
 void app_main(void)
 {
     printf("Started.\n");

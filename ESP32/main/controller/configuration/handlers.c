@@ -11,6 +11,8 @@
 
 #include "../../config.h"
 
+bool heat;
+
 void http_post_handler_time_date(const char* uri, const char* data)
 {
     printf("POST %s : %s\n", uri, data);
@@ -102,12 +104,12 @@ const char* http_get_handler(const char* uri)
     } else if(strcmp(uri, "/debug") == 0) {
         double temperature = tmp175_alt_get_temp();
         double slope = estimator_get_slope();
-        struct time t;
-        get_current_time(&t);
+        struct time t = get_current_time();
         struct time next_start = presence_get_next_start(t);
 
         sprintf(str,
-            "Temperature: %.2f\nSlope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d\n",
+            "%s Temperature: %.2f\nSlope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d\n",
+            heat?"(CHAUFFE)":"",
             temperature,
             slope,
             t.hour, t.minute, t.day,
