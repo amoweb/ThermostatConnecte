@@ -142,7 +142,10 @@ void register_post_endpoint(httpd_handle_t server, char* uri, void (*fun_ptr)(co
     // index in registered_function_array 
     registered_post_endpoint[nb_registered_post_endpoint].user_ctx  = (void*)(&registered_function_post_endpoint[nb_registered_post_endpoint]);
 
-    httpd_register_uri_handler(server, &registered_post_endpoint[nb_registered_post_endpoint]);
+    esp_err_t err = httpd_register_uri_handler(server, &registered_post_endpoint[nb_registered_post_endpoint]);
+    if(err) {
+        printf("httpd_register_uri_handler error: %d\n", err);
+    }
 
     nb_registered_post_endpoint++;
 }
@@ -159,6 +162,7 @@ httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.max_uri_handlers = 20;
 
 #if 0
     // TODO
