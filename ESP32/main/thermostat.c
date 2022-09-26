@@ -115,9 +115,14 @@ void app_main(void)
         return;
     }
 
+    init_presence_array();
+
     struct time t;
-    bool heat;
+    bool preIsPresent = false;
     while(true) {
+        double temperaturePresence;
+        double temperatureAbsence;
+        get_temperature_target(&temperaturePresence, &temperatureAbsence);
         double temperature = tmp175_alt_get_temp();
 
         hysteresis_step(temperature, &heat);
@@ -126,16 +131,42 @@ void app_main(void)
 
         printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 
-        get_current_time(&t);
+        t = get_current_time();
+        printf("Current time: %2d:%2d day=%d\n", t.hour, t.minute, t.day);
 
         estimator_step(temperature, heat, t);
         double slope = estimator_get_slope();
 
         printf("Slope: %.2f degrees/hour\n", slope);
-        printf("Current time: %2d:%2d day=%d\n", t.hour, t.minute, t.day);
+
+        bool isPresent = presence_is_present(t);
     
-        // struct time next_start = presence_get_next_start(t);
-        // printf("Next start: %2d:%2d day=%d\n", next_start.hour, next_start.minute, next_start.day);
+        // Transition vers présence
+        if(isPresent && !preIsPresent) {
+            hysteresis_set_target(temperaturePresence);
+        }
+
+        // Transition vers absence
+        if(!isPresent && preIsPresent) {
+            hysteresis_set_target(temperatureAbsence);
+        }
+
+        struct time prochainDemarrage = presence_get_next_start(t);
+        double tempsJusquAuProchainDemarrageHeures = time_duration_hour(t, prochainDemarrage);
+
+        // Anticipe la chauffe
+        if(temperature < temperaturePresence) {
+            double dureeChauffeHeures = (temperaturePresence - temperature) / slope;
+            if(!isPresent && tempsJusquAuProchainDemarrageHeures < dureeChauffeHeures) {
+                hysteresis_set_target(temperaturePresence);
+            }
+            printf("tempsJusquAuProchainDemarrageHeures = %f\n", tempsJusquAuProchainDemarrageHeures);
+            printf("dureeChauffeHeures = %f\n", dureeChauffeHeures);
+        }
+
+        printf("Next start: %2d:%2d day=%d\n", prochainDemarrage.hour, prochainDemarrage.minute, prochainDemarrage.day);
+
+        preIsPresent = isPresent;
     }
 
     fflush(stdout);

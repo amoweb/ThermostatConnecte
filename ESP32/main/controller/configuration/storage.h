@@ -55,6 +55,13 @@ struct time time_duration(struct time t1, struct time t2);
   **/
 unsigned int time_duration_minute(struct time t1, struct time t2);
 
+/**
+  * Computation duration from t1 to t2.
+  * Returns: (t2 - t1)
+  * Limitation: difference can't be more than 7 days
+  **/
+double time_duration_hour(struct time t1, struct time t2);
+
 void time_test();
 
 void init_presence_array();
@@ -81,6 +88,13 @@ struct time presence_get_next_start(struct time currentTime);
  @return time (hour is 99 if nothing is found)
  **/
 struct time presence_get_next_end(struct time currentTime);
+
+/**
+  * Renvoie true si currentTime est dans une plage de présence.
+  * @param[in] currentTime
+  * @return bool
+  **/
+bool presence_is_present(struct time currentTime);
 
 presence_s presence_array[7][2];
 

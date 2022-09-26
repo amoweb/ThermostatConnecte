@@ -22,16 +22,24 @@ void get_temperature_target(double* presence, double* absence)
 }
 
 
+/*
+   presence_array[D][T]
+   D = 0-6 for (mon - sun)
+   T = 0 for first heat, 1 for second heat
+ */
 presence_s presence_array[7][2];
 
 void init_presence_array() {
     for(unsigned int d=0; d<7; d++) {
-        for(unsigned int i=0; i<2; i++) {
-            presence_array[d][i].start_hour = 0;
-            presence_array[d][i].start_minute = 0;
-            presence_array[d][i].end_hour = 0;
-            presence_array[d][i].end_minute = 0;
-        }
+        presence_array[d][0].start_hour = 7;
+        presence_array[d][0].start_minute = 0;
+        presence_array[d][0].end_hour = 8;
+        presence_array[d][0].end_minute = 30;
+
+        presence_array[d][1].start_hour = 18;
+        presence_array[d][1].start_minute = 0;
+        presence_array[d][1].end_hour = 22;
+        presence_array[d][1].end_minute = 00;
     }
 }
 
@@ -111,6 +119,11 @@ bool time_equals(struct time t1, struct time t2)
     return ( t1.day==t2.day && t1.hour==t2.hour && t1.minute==t2.minute );
 }
 
+double time_duration_hour(struct time t1, struct time t2)
+{
+    return ((double)time_duration_minute(t1, t2)) / 60;
+}
+
 unsigned int time_duration_minute(struct time t1, struct time t2)
 {
     /*
@@ -183,6 +196,23 @@ void time_test()
     }
 
     printf("Tests OK\n");
+}
+
+bool presence_is_present(struct time currentTime)
+{
+    unsigned int d = currentTime.day;
+    unsigned int tcurrent = currentTime.hour*60 + currentTime.minute;
+
+    for(unsigned int h=0; h<2; h++) {
+        presence_s p = presence_array[d][h];
+        unsigned int tbegin = p.start_hour*60 + p.start_minute;
+        unsigned int tend = p.end_hour*60 + p.end_minute;
+        if(tcurrent >= tbegin && tcurrent < tend) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 struct time presence_get_next_start(struct time currentTime)
