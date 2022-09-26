@@ -31,6 +31,7 @@ void tmp175_alt_init()
    Returns temp in Celsius degrees from TMP175
    Note : resolution 1 Celsius degree
  */
+static double preTmp175 = 0;
 double tmp175_alt_get_temp() {
 
     esp_err_t ret;
@@ -82,7 +83,16 @@ double tmp175_alt_get_temp() {
     }
     i2c_cmd_link_delete(cmd_handle);
 
-    return data[0] + (data[1] >> 4) * 0.0625;
+    double t = data[0] + (data[1] >> 4) * 0.0625;
+
+    // Filter high values
+    if(t > 40 || t < 0) {
+        return preTmp175;
+    }
+
+    preTmp175 = t;
+
+    return t;
 }
 
 void tmp175_alt_stop()
