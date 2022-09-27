@@ -99,3 +99,34 @@ bool presence_is_present(struct time currentTime);
 presence_s presence_array[7][2];
 
 void test_time();
+
+typedef struct stats_record {
+    struct time time;
+    double temperature;
+    double targetTemperature;
+    double slope;
+    bool heat;
+} stats_record_s;
+
+/**
+  * Add a new record to stats. Maximum ont record per minute is recorded.
+  * @param[in] stats_record_s
+  */
+void stats_add_record(stats_record_s r);
+
+/**
+  * Read latest record.
+  * @return stats_record_s
+  */
+stats_record_s stats_get_last_record();
+
+/**
+  * Read all records. Two array part1 and part2 are returned. Points or part1
+  * are older to points of part2.
+  * @param[out] part1
+  * @param[out] sizePart1
+  * @param[out] part2
+  * @param[out] sizePart2
+  */
+void stats_get_all_records(stats_record_s** part1, unsigned int* sizePart1, stats_record_s** part2, unsigned int* sizePart2);
+

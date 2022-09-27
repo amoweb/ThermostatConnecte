@@ -11,8 +11,6 @@
 
 #include "../../config.h"
 
-bool heat;
-
 void http_post_handler_time_date(const char* uri, const char* data)
 {
     printf("POST %s : %s\n", uri, data);
@@ -102,19 +100,52 @@ const char* http_get_handler(const char* uri)
         sprintf(str, "%.2f\n", absence);
 
     } else if(strcmp(uri, "/debug") == 0) {
-        double temperature = tmp175_alt_get_temp();
-        double slope = estimator_get_slope();
         struct time t = get_current_time();
         struct time next_start = presence_get_next_start(t);
+        double temperature = tmp175_alt_get_temp();
+        stats_record_s r = stats_get_last_record();
 
         sprintf(str,
-            "%s Temperature: %.2f\nSlope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d\n",
-            heat?"(CHAUFFE)":"",
+            "%s Temperature: %.2f\nTarget temperature: %.2f\n Slope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d\n",
+            r.heat?"(CHAUFFE)":"",
             temperature,
-            slope,
+            r.targetTemperature,
+            r.slope,
             t.hour, t.minute, t.day,
             next_start.hour, next_start.minute, next_start.day
         );
+    } else if(strcmp(uri, "/stats") == 0) {
+        stats_record_s *part1;
+        unsigned int sizePart1;
+        stats_record_s *part2;
+        unsigned int sizePart2;
+
+        stats_get_all_records(&part1, &sizePart1, &part2, &sizePart2);
+
+        unsigned int pos = 0;
+        for(int partNum = 0; partNum < 2; partNum++) {
+            unsigned int sizePart = 0;
+            stats_record_s* part = NULL;
+
+            switch(partNum) {
+                case 0:
+                    sizePart = sizePart1;
+                    part = part1;
+                    break;
+                case 1:
+                    sizePart = sizePart2;
+                    part = part2;
+                    break;
+            }
+
+            for(int i=0; i<sizePart; i++) {
+                stats_record_s* p = &part[i];
+                pos += sprintf(&str[pos], "%.2f,%d,%d,%d,", p->temperature,p->time.hour,p->time.minute,p->heat);
+                if(pos > RESPONSE_BUFFER_SIZE - 20) {
+                    return str;
+                }
+            }
+        }
 
     } else if(strcmp(uri, "/") == 0) {
 

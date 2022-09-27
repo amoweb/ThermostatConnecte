@@ -278,3 +278,46 @@ void test_time()
 
     printf("test_time OK\n");
 }
+
+#define NB_STATS 1000
+static stats_record_s stats[NB_STATS];
+static unsigned int stats_pos = -1;
+void stats_add_record(stats_record_s r)
+{
+    if(stats_pos == -1) {
+        stats[0] = r;
+        stats_pos = 0;
+    } else if( time_duration_minute(r.time, stats[stats_pos].time) >= 3 /* minute interval */ ) {
+        stats_pos = (stats_pos + 1) % NB_STATS;
+        stats[stats_pos] = r;
+    }
+}
+
+stats_record_s stats_get_last_record()
+{
+    if(stats_pos == -1) {
+        stats_record_s x;
+        x.temperature = 0.0;
+        x.targetTemperature = 0.0;
+        x.time.hour = 99;
+        x.time.minute = 99;
+        x.time.day = 0;
+        x.heat = false;
+        x.slope = 0.0;
+        return x;
+    } else {
+        return stats[stats_pos];
+    }
+}
+
+void stats_get_all_records(
+    stats_record_s** part1, unsigned int* sizePart1,
+    stats_record_s** part2, unsigned int* sizePart2
+)
+{
+    *part1 = &stats[stats_pos];
+    *sizePart2 = NB_STATS - stats_pos;
+    *part2 = &stats[0];
+    *sizePart2 = stats_pos;
+}
+

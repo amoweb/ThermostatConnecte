@@ -32,8 +32,6 @@ Author: Amaury Graillat */
 
 #include "config.h"
 
-bool heat;
-
 void app_main(void)
 {
     printf("Started.\n");
@@ -63,6 +61,7 @@ void app_main(void)
     register_get_endpoint(server, "/target_presence", http_get_handler);
     register_get_endpoint(server, "/target_absence", http_get_handler);
     register_get_endpoint(server, "/debug", http_get_handler);
+    register_get_endpoint(server, "/stats", http_get_handler);
     register_post_endpoint(server, "/heat", http_post_handler_heat);
     register_post_endpoint(server, "/target", http_post_handler_temperature);
     register_post_endpoint(server, "/time", http_post_handler_time_date);
@@ -117,8 +116,10 @@ void app_main(void)
 
     init_presence_array();
 
+    stats_record_s record;
     struct time t;
     bool preIsPresent = false;
+    bool heat = false;
     while(true) {
         double temperaturePresence;
         double temperatureAbsence;
@@ -165,6 +166,14 @@ void app_main(void)
         }
 
         printf("Next start: %2d:%2d day=%d\n", prochainDemarrage.hour, prochainDemarrage.minute, prochainDemarrage.day);
+
+        // Enregistrer les statistiques
+        record.time = t;
+        record.temperature = temperature;
+        record.targetTemperature = hysteresis_get_target();
+        record.slope = slope;
+        record.heat = heat;
+        stats_add_record(record);
 
         preIsPresent = isPresent;
     }
