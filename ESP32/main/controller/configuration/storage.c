@@ -283,17 +283,22 @@ void test_time()
     printf("test_time OK\n");
 }
 
-#define NB_STATS 1000
+#define NB_STATS 500
 static stats_record_s stats[NB_STATS];
 static unsigned int stats_pos = -1;
+static bool stats_buffer_full = false;
 void stats_add_record(stats_record_s r)
 {
     if(stats_pos == -1) {
         stats[0] = r;
         stats_pos = 0;
-    } else if( time_duration_minute(r.time, stats[stats_pos].time) >= 3 /* minute interval */ ) {
+    } else if( time_duration_minute(r.time, stats[stats_pos].time) >= 4 /* minute interval */ ) {
         stats_pos = (stats_pos + 1) % NB_STATS;
         stats[stats_pos] = r;
+
+        if(stats_pos == 0 && !stats_buffer_full) {
+            stats_buffer_full = true;
+        }
     }
 }
 
@@ -319,9 +324,25 @@ void stats_get_all_records(
     stats_record_s** part2, unsigned int* sizePart2
 )
 {
-    *part1 = &stats[stats_pos];
-    *sizePart2 = NB_STATS - stats_pos;
-    *part2 = &stats[0];
-    *sizePart2 = stats_pos;
+    if(stats_pos == -1) {
+        *part1 = &stats[0];
+        *sizePart1 = 0;
+        *part2 = &stats[0];
+        *sizePart2 = 0;
+    } else {
+
+        // La première partie doit avoir été remplie une fois pour pouvoir être
+        // lue.
+        if(stats_buffer_full) {
+            *part1 = &stats[stats_pos];
+            *sizePart1 = NB_STATS - stats_pos;
+        } else {
+            *part1 = &stats[0];
+            *sizePart1 = 0;
+        }
+
+        *part2 = &stats[0];
+        *sizePart2 = stats_pos;
+    }
 }
 

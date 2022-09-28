@@ -128,6 +128,8 @@ const char* http_get_handler(const char* uri)
 
         stats_get_all_records(&part1, &sizePart1, &part2, &sizePart2);
 
+        str[0] = 0;
+
         unsigned int pos = 0;
         for(int partNum = 0; partNum < 2; partNum++) {
             unsigned int sizePart = 0;
