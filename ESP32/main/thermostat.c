@@ -127,8 +127,8 @@ void app_main(void)
         double temperature = tmp175_alt_get_temp();
 
         hysteresis_step(temperature, &heat);
-
         led_set_level(THERMOSTAT_RELAY_GPIO, heat);
+        led_set_level(THERMOSTAT_LED_GPIO, !heat); // false = on
 
         printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 
