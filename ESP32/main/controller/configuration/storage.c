@@ -17,8 +17,12 @@ void set_temperature_target(double presence, double absence)
 
 void get_temperature_target(double* presence, double* absence)
 {
-    *presence = target_temp_presence;
-    *absence = target_temp_absence;
+    if(presence) {
+        *presence = target_temp_presence;
+    }
+    if(absence) {
+        *absence = target_temp_absence;
+    }
 }
 
 

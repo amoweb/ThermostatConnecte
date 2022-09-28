@@ -65,14 +65,20 @@ void http_post_handler_presence(const char* uri, const char* data)
 
 void pushbutton_black_handler(void * args)
 {
-    led_on(THERMOSTAT_LED_GPIO);
-    // relay_on(THERMOSTAT_RELAY_GPIO);
+    led_set_level(THERMOSTAT_LED_GPIO, true); // off
+
+    double temperatureAbsence;
+    get_temperature_target(NULL, &temperatureAbsence);
+    hysteresis_set_target(temperatureAbsence);
 }
 
 void pushbutton_red_handler(void * args)
 {
-    led_off(THERMOSTAT_LED_GPIO);
-    // relay_off(THERMOSTAT_RELAY_GPIO);
+    led_set_level(THERMOSTAT_LED_GPIO, false); // on
+
+    double temperaturePresence;
+    get_temperature_target(&temperaturePresence, NULL);
+    hysteresis_set_target(temperaturePresence);
 }
 
 #define RESPONSE_BUFFER_SIZE (2*4096)
