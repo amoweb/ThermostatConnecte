@@ -34,7 +34,7 @@ void get_temperature_target(double* presence, double* absence)
 presence_s presence_array[7][2];
 
 void init_presence_array() {
-    for(unsigned int d=0; d<7; d++) {
+    for(unsigned int d=0; d<5; d++) {
         presence_array[d][0].start_hour = 7;
         presence_array[d][0].start_minute = 0;
         presence_array[d][0].end_hour = 8;
@@ -44,6 +44,17 @@ void init_presence_array() {
         presence_array[d][1].start_minute = 0;
         presence_array[d][1].end_hour = 22;
         presence_array[d][1].end_minute = 00;
+    }
+    for(unsigned int d=5; d<7; d++) {
+        presence_array[d][0].start_hour = 99;
+        presence_array[d][0].start_minute = 99;
+        presence_array[d][0].end_hour = 99;
+        presence_array[d][0].end_minute = 99;
+
+        presence_array[d][1].start_hour = 99;
+        presence_array[d][1].start_minute = 99;
+        presence_array[d][1].end_hour = 99;
+        presence_array[d][1].end_minute = 99;
     }
 }
 
