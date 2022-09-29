@@ -303,7 +303,7 @@ void stats_add_record(stats_record_s r)
     if(stats_pos == -1) {
         stats[0] = r;
         stats_pos = 0;
-    } else if( time_duration_minute(r.time, stats[stats_pos].time) >= 4 /* minute interval */ ) {
+    } else if( time_duration_minute(stats[stats_pos].time, r.time) >= 4 /* minute interval */ ) {
         stats_pos = (stats_pos + 1) % NB_STATS;
         stats[stats_pos] = r;
 
@@ -345,15 +345,15 @@ void stats_get_all_records(
         // La première partie doit avoir été remplie une fois pour pouvoir être
         // lue.
         if(stats_buffer_full) {
-            *part1 = &stats[stats_pos];
-            *sizePart1 = NB_STATS - stats_pos;
+            *part1 = &stats[stats_pos + 1];
+            *sizePart1 = NB_STATS - stats_pos - 1;
         } else {
             *part1 = &stats[0];
             *sizePart1 = 0;
         }
 
         *part2 = &stats[0];
-        *sizePart2 = stats_pos;
+        *sizePart2 = stats_pos + 1;
     }
 }
 
