@@ -62,6 +62,7 @@ void app_main(void)
     register_get_endpoint(server, "/target_absence", http_get_handler);
     register_get_endpoint(server, "/debug", http_get_handler);
     register_get_endpoint(server, "/stats", http_get_handler);
+    register_get_endpoint(server, "/presence", http_get_handler);
     register_post_endpoint(server, "/heat", http_post_handler_heat);
     register_post_endpoint(server, "/target", http_post_handler_temperature);
     register_post_endpoint(server, "/time", http_post_handler_time_date);

@@ -58,20 +58,23 @@ void init_presence_array() {
     }
 }
 
-void print_presence_array()
+void get_presence_array(char* str)
 {
+    unsigned int pos = 0;
+
+    pos += sprintf(&str[pos], "{\"v\":[");
+
     for(unsigned int d=0; d<7; d++) {
         for(unsigned int i=0; i<2; i++) {
-            printf("Day %d %d/2 : %d:%d - %d:%d\n",
-                    d, 
-                    i,
+            pos += sprintf(&str[pos], "%d,%d,%d,%d,",
                     presence_array[d][i].start_hour,
                     presence_array[d][i].start_minute,
                     presence_array[d][i].end_hour,
                     presence_array[d][i].end_minute
-                    );
+            );
         }
     }
+    pos += sprintf(&str[pos], "0]}");
 }
 
 void set_presence_array_from_string(const char* data)

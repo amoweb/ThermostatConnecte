@@ -59,7 +59,6 @@ void http_post_handler_presence(const char* uri, const char* data)
     printf("POST %s : %s\n", uri, data);
 
     set_presence_array_from_string(data);
-    print_presence_array();
     // h0a=7&m0a=00&h0b=8&m0b=30&h0c=18&m0c=00&h0d=22&m0d=00&h1a=7&m0a=00&h1b=8&m0b=30&h1c=18&m0c=00&h1d=22&m0d=00&h2a=7&m0a=00&h2b=8&m0b=30&h2c=18&m0c=00&h2d=22&m0d=00&h3a=7&m0a=00&h3b=8&m0b=30&h3c=18&m0c=00&h3d=22&m0d=00&h4a=7&m0a=00&h4b=8&m0b=30&h4c=18&m0c=00&h4d=22&m0d=00&h5a=7&m0a=00&h5b=8&m0b=30&h5c=18&m0c=00&h5d=22&m0d=00&h6a=7&m0a=00&h6b=8&m0b=30&h6c=18&m0c=00&h6d=22&m0d=00
 }
 
@@ -81,7 +80,7 @@ void pushbutton_red_handler(void * args)
     hysteresis_set_target(temperaturePresence);
 }
 
-#define RESPONSE_BUFFER_SIZE (2*4096)
+#define RESPONSE_BUFFER_SIZE (2*4096 + 1024)
 char str[RESPONSE_BUFFER_SIZE];
 const char* http_get_handler(const char* uri)
 {
@@ -154,6 +153,8 @@ const char* http_get_handler(const char* uri)
                 }
             }
         }
+    } else if(strcmp(uri, "/presence") == 0) {
+        get_presence_array(str);
 
     } else if(strcmp(uri, "/") == 0) {
 

@@ -65,7 +65,7 @@ double time_duration_hour(struct time t1, struct time t2);
 void time_test();
 
 void init_presence_array();
-void print_presence_array();
+void get_presence_array(char* str);
 void set_presence_array_from_string(const char* data);
 
 typedef struct presence {
