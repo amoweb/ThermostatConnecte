@@ -107,7 +107,7 @@ struct time get_current_time()
     struct time t;
     t.day = (timestamp % (7*24*60*60)) / (24 * 60 * 60);
 
-    time_t rem = timestamp - (t.day * 24 * 60 * 60);
+    time_t rem = timestamp % (7*24*60*60) - (t.day * 24 * 60 * 60);
 
     t.hour = rem / (60 * 60);
 
