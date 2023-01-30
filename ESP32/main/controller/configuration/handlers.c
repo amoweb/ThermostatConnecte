@@ -110,14 +110,50 @@ const char* http_get_handler(const char* uri)
         double temperature = tmp175_alt_get_temp();
         stats_record_s r = stats_get_last_record();
 
+        unsigned nbHeat = 0;
+
+        stats_record_s *part1;
+        unsigned int sizePart1;
+        stats_record_s *part2;
+        unsigned int sizePart2;
+
+        stats_get_all_records(&part1, &sizePart1, &part2, &sizePart2);
+
+        str[0] = 0;
+
+        unsigned int pos = 0;
+        for(int partNum = 0; partNum < 2; partNum++) {
+            unsigned int sizePart = 0;
+            stats_record_s* part = NULL;
+
+            switch(partNum) {
+                case 0:
+                    sizePart = sizePart1;
+                    part = part1;
+                    break;
+                case 1:
+                    sizePart = sizePart2;
+                    part = part2;
+                    break;
+            }
+
+            for(int i=0; i<sizePart; i++) {
+                stats_record_s* p = &part[i];
+                nbHeat += p->heat;
+            }
+        }
+
+        double k = 100.0 * ((double)nbHeat / (sizePart1 + sizePart2));
+
         sprintf(str,
-            "%s Temperature: %.2f\nTarget temperature: %.2f\n Slope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d\n",
+            "%s Temperature: %.2f\nTarget temperature: %.2f\n Slope: %.2f degrees/hour\nCurrent time: %2d:%2d day=%d\nNext start: %2d:%2d day=%d C=%.2f\n",
             r.heat?"(CHAUFFE)":"",
             temperature,
             r.targetTemperature,
             r.slope,
             t.hour, t.minute, t.day,
-            next_start.hour, next_start.minute, next_start.day
+            next_start.hour, next_start.minute, next_start.day,
+            k
         );
     } else if(strcmp(uri, "/stats") == 0) {
         stats_record_s *part1;
