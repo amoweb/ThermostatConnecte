@@ -2,8 +2,10 @@
 
 #include <stdio.h>
 
+#define SLOPE_HISTORY_LENGTH 5
+
 struct estimator {
-    double slopeHistory[2];
+    double slopeHistory[SLOPE_HISTORY_LENGTH];
     unsigned int slopeHistoryIndex;
 
     double temperature1;
@@ -20,12 +22,13 @@ static struct estimator p_;
 static int min_temperature_delta = 1;
 static double slope_min = 0.3;
 static double slope_max = 4;
-static double slope_default = 2;
 
 void estimator_init()
 {
-    p_.slopeHistory[0] = -1;
-    p_.slopeHistory[1] = -1;
+    for(int i = 0; i < SLOPE_HISTORY_LENGTH; i++) {
+        p_.slopeHistory[i] = slope_max;
+    }
+
     p_.slopeHistoryIndex = 0;
 
     p_.time1.day = 0;
@@ -64,7 +67,7 @@ void estimator_step(double temperature, bool heat, struct time currentTime)
     
             p_.slopeHistory[p_.slopeHistoryIndex] = slope;
 
-            p_.slopeHistoryIndex = (p_.slopeHistoryIndex + 1) % 2;
+            p_.slopeHistoryIndex = (p_.slopeHistoryIndex + 1) % SLOPE_HISTORY_LENGTH;
         }
     }
 
@@ -73,16 +76,13 @@ void estimator_step(double temperature, bool heat, struct time currentTime)
 
 double estimator_get_slope()
 {
-    double s = 0;
+    double s = slope_max;
 
-    if(p_.slopeHistory[0] == -1 && p_.slopeHistory[1] == -1) {
-        s = slope_default;
-    } else if(p_.slopeHistory[0] == -1) {
-        s = p_.slopeHistory[1];
-    } else if(p_.slopeHistory[1] == -1) {
-        s = p_.slopeHistory[0];
-    } else {
-        s = (p_.slopeHistory[1] + p_.slopeHistory[0]) / 2;
+    // Compute sliding min over history
+    for(int i = 0; i < SLOPE_HISTORY_LENGTH; i++) {
+        if(p_.slopeHistory[i] < s) {
+            s = p_.slopeHistory[i];
+        }
     }
 
     // Clipping
@@ -124,7 +124,7 @@ void estimator_test()
     
     slope = estimator_get_slope();
     printf("slope 2 = %f\n", slope);
-    if(slope != 3) {
+    if(slope != 2) {
         printf("FAIL 2\n");
         while(true)
             ;
