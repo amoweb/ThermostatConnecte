@@ -18,7 +18,8 @@ Author: Amaury Graillat */
 
 #include "device/LED/LED.h"
 #include "device/relay/relay.h"
-#include "device/LM35/LM35.h"
+//#include "device/LM35/LM35.h"
+#include "device/ONE_WIRE/include/onewire.h"
 #include "device/TMP175_alt/tmp175.h"
 #include "device/pushbutton/pushbutton.h"
 
@@ -48,10 +49,10 @@ void app_main(void)
 
     wifi_init_sta();
 
-    tmp175_alt_init();
+    //tmp175_alt_init();
 
-    led_init(THERMOSTAT_LED_GPIO);
-    relay_init(THERMOSTAT_RELAY_GPIO);
+    //led_init(THERMOSTAT_LED_GPIO);
+    //relay_init(THERMOSTAT_RELAY_GPIO);
 
     server = start_webserver();
 
@@ -68,10 +69,10 @@ void app_main(void)
     register_post_endpoint(server, "/time", http_post_handler_time_date);
     register_post_endpoint(server, "/presence", http_post_handler_presence);
 
-    LM35_init_adc1(THERMOSTAT_LM35_ADC);
+    //LM35_init_adc1(THERMOSTAT_LM35_ADC);
 
-    pushbutton_register_handler(THERMOSTAT_PB_BLACK_GPIO, pushbutton_black_handler, NULL);
-    pushbutton_register_handler(THERMOSTAT_PB_RED_GPIO, pushbutton_red_handler, NULL);
+    //pushbutton_register_handler(THERMOSTAT_PB_BLACK_GPIO, pushbutton_black_handler, NULL);
+    //pushbutton_register_handler(THERMOSTAT_PB_RED_GPIO, pushbutton_red_handler, NULL);
 
     hysteresis_init();
     hysteresis_set_target(17);
@@ -125,11 +126,17 @@ void app_main(void)
         double temperaturePresence;
         double temperatureAbsence;
         get_temperature_target(&temperaturePresence, &temperatureAbsence);
-        double temperature = tmp175_alt_get_temp();
+        //double temperature = tmp175_alt_get_temp();
+
+        // Thermomètre interne
+        float tmpFloat = 0.0;
+        ds18b20_measure(THERMOSTAT_DS18B20_GPIO, &tmpFloat);
+
+        double temperature = (double)tmpFloat;
 
         hysteresis_step(temperature, &heat);
-        led_set_level(THERMOSTAT_RELAY_GPIO, heat);
-        led_set_level(THERMOSTAT_LED_GPIO, !heat); // false = on
+        //led_set_level(THERMOSTAT_RELAY_GPIO, heat);
+        //led_set_level(THERMOSTAT_LED_GPIO, !heat); // false = on
 
         printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 
@@ -182,7 +189,7 @@ void app_main(void)
     fflush(stdout);
 
     stop_webserver(server);
-    tmp175_alt_stop();
+    //tmp175_alt_stop();
 
     //esp_restart();
 }

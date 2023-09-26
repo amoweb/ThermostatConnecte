@@ -1,4 +1,6 @@
-idf_component_register(SRCS "thermostat.c" "network/wifi/wifi.c" "network/http/http.c" "device/TMP175_alt/tmp175.c" "device/relay/relay.c" "device/LED/LED.c" "device/LM35/LM35.c" "device/pushbutton/pushbutton.c" "controller/hysteresis/hysteresis.c" "controller/configuration/storage.c" "controller/configuration/handlers.c" "controller/estimator/estimator.c" INCLUDE_DIRS "")
+idf_component_register(SRCS "thermostat.c" "network/wifi/wifi.c" "network/http/http.c" "device/TMP175_alt/tmp175.c" "device/relay/relay.c" "device/LED/LED.c" "device/pushbutton/pushbutton.c" "controller/hysteresis/hysteresis.c" "controller/configuration/storage.c" "controller/configuration/handlers.c" "controller/estimator/estimator.c" "device/ONE_WIRE/onewire.c" INCLUDE_DIRS "device/ONE_WIRE/include/")
+
+#"device/LM35/LM35.c" 
 
 # Create a SPIFFS image from the contents of the 'spiffs_image' directory
 # that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that
