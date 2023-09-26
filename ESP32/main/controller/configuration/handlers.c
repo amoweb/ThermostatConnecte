@@ -121,7 +121,6 @@ const char* http_get_handler(const char* uri)
 
         str[0] = 0;
 
-        unsigned int pos = 0;
         for(int partNum = 0; partNum < 2; partNum++) {
             unsigned int sizePart = 0;
             stats_record_s* part = NULL;
