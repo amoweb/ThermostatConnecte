@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * Store presence and absence temperature
@@ -17,9 +18,10 @@ void set_temperature_target(double presence, double absence);
 void get_temperature_target(double* presence, double* absence);
 
 struct time {
-    unsigned int hour;   // hour in [0, 23]
-    unsigned int minute; // minute in [0, 60]
-    unsigned int day;    // day in [0, 6] for Monday - Sunday
+    uint8_t second; // hour in [0, 60]
+    uint8_t hour;   // hour in [0, 23]
+    uint8_t minute; // minute in [0, 60]
+    uint8_t day;    // day in [0, 6] for Monday - Sunday
 };
 
 /**
@@ -69,10 +71,10 @@ void get_presence_array(char* str);
 void set_presence_array_from_string(const char* data);
 
 typedef struct presence {
-    unsigned int start_hour;
-    unsigned int start_minute;
-    unsigned int end_hour;
-    unsigned int end_minute;
+    uint8_t start_hour;
+    uint8_t start_minute;
+    uint8_t end_hour;
+    uint8_t end_minute;
 } presence_s;
 
 /**
