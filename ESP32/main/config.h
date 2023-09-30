@@ -24,4 +24,12 @@
 
 #define THERMOSTAT_ESP32_ADC_VREF 1100
 
+#define CONFIG_CAPTEUR_DS18B20 1
+#define CONFIG_F_RFM_433 1
+#define CONFIG_TYPE_RFM12 1
+
+#define MAIN_OK     BIT0
+#define ER_RFM12    BIT1
+#define ER_TEMP_INT BIT2
+
 #endif

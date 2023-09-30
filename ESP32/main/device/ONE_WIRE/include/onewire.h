@@ -103,6 +103,8 @@ int onewire_read(gpio_num_t pin);
 
 esp_err_t ds18b20_measure(gpio_num_t pin, float *temperature);
 
+void ds18b20_init(gpio_num_t pin);
+
 
 #ifdef __cplusplus
 }

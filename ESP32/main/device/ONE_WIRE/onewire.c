@@ -57,6 +57,8 @@
 
 #include "esp_log.h"
 
+#ifdef CONFIG_BUS_ONE_WIRE
+
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /*  constantes */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -324,3 +326,18 @@ ESP_LOGW(TAG,"ERREUR %s onewire_read", __FUNCTION__);
 	return ESP_OK;
 }
 
+void ds18b20_init(gpio_num_t pin)
+{
+    // ---------- INITIALISE bus ONE_WIRE
+    gpio_reset_pin(pin);
+#ifdef CONFIG_ONE_WIRE_INTERNAL_PULLUP
+#warning "CONFIG_ONE_WIRE_INTERNAL_PULLUP"
+    gpio_set_pull_mode(dht_gpio, GPIO_PULLUP_ONLY);
+#else
+    gpio_set_pull_mode(pin, GPIO_FLOATING);		
+#endif
+    gpio_set_direction(pin, GPIO_MODE_OUTPUT_OD);
+    gpio_set_level(pin, 1);
+
+}
+#endif
