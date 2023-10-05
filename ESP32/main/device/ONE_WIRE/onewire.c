@@ -57,7 +57,7 @@
 
 #include "esp_log.h"
 
-#ifdef CONFIG_BUS_ONE_WIRE
+//#ifdef CONFIG_BUS_ONE_WIRE
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /*  constantes */
@@ -340,4 +340,4 @@ void ds18b20_init(gpio_num_t pin)
     gpio_set_level(pin, 1);
 
 }
-#endif
+//#endif

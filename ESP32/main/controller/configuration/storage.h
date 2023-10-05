@@ -65,6 +65,7 @@ unsigned int time_duration_minute(struct time t1, struct time t2);
 double time_duration_hour(struct time t1, struct time t2);
 
 void time_test();
+void test_time();
 
 void init_presence_array();
 void get_presence_array(char* str);
@@ -97,8 +98,6 @@ struct time presence_get_next_end(struct time currentTime);
   * @return bool
   **/
 bool presence_is_present(struct time currentTime);
-
-void test_time();
 
 typedef struct stats_record {
     struct time time;

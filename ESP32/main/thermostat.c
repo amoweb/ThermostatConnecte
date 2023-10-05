@@ -261,6 +261,15 @@ void gestionMiseAJour()
 }
 
 
+void init_gestionMiseAJour()
+{
+    main_event_group = xEventGroupCreate();
+    xEventGroupClearBits(main_event_group, MAIN_OK | ER_RFM12 | ER_TEMP_INT);
+    // ---------- INITIALISE thread de mise à jour
+    // NOTE utiliser tskIDLE_PRIORITY pour éviter l'appel watchdog, mais utilise tout le temps processeur !
+    xTaskCreatePinnedToCore(gestionMiseAJour, "threadMAJ", 10000, NULL, 1, NULL, 1);
+}
+
 void app_main(void)
 {
     printf("Started.\n");
@@ -345,6 +354,8 @@ void app_main(void)
         }
         return;
     }
+
+    init_gestionMiseAJour();
 
     init_presence_array();
 

@@ -12,8 +12,15 @@ idf_component_register(
     "controller/configuration/handlers.c"
     "controller/estimator/estimator.c"
     "device/ONE_WIRE/onewire.c"
+    "device/RFM12/RFM12.c"
+    "device/BUS_SPI/bus_spi.c"
     INCLUDE_DIRS
     "device/ONE_WIRE/include/"
+)
+
+include_directories(
+    "device/BUS_SPI/include"
+    "device/RFM12/include"
 )
 
 #"device/LM35/LM35.c" 
