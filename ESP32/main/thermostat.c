@@ -1,6 +1,3 @@
-/* Thermostat Connecté
-Author: Amaury Graillat */
-
 #include <stdint.h>
 #include <stdio.h>
 #include "sdkconfig.h"
@@ -10,6 +7,7 @@ Author: Amaury Graillat */
 #include "freertos/event_groups.h"
 #include <pthread.h>
 
+#include "driver/spi_master.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 #include "esp_wifi.h"
@@ -22,7 +20,6 @@ Author: Amaury Graillat */
 
 #include "device/LED/LED.h"
 #include "device/relay/relay.h"
-//#include "device/LM35/LM35.h"
 #include "device/ONE_WIRE/include/onewire.h"
 #include "device/TMP175_alt/tmp175.h"
 #include "device/pushbutton/pushbutton.h"
@@ -39,8 +36,8 @@ Author: Amaury Graillat */
 
 //////////////////////////
 // Thermomètre sans fil
-#define	LOCK_MUTEX_RFM12				pthread_mutex_lock(&E_R_RFM12->mutex);
-#define	UNLOCK_MUTEX_RFM12			pthread_mutex_unlock(&E_R_RFM12->mutex);
+#define	LOCK_MUTEX_RFM12 pthread_mutex_lock(&E_R_RFM12->mutex);
+#define	UNLOCK_MUTEX_RFM12 pthread_mutex_unlock(&E_R_RFM12->mutex);
 // FREQ_BCLE assure le temps d'attente dans la boucle de mise à jour. A ajuster si modification du débit RFM12 ?
 #define	FREQ_BCLE								20		// en ms = fréquence de scrutation des modifications html et RFM12
 // FREQ_CAPT assure le temps de scrutation des capteurs internes
@@ -48,9 +45,8 @@ Author: Amaury Graillat */
 #define	FREQ_CAPT								(300 * 1000) / FREQ_BCLE 	// en secondes
 esp_err_t lect_DS18B20(float *temperature);
 
-
-#define	LOCK_MUTEX_INTERFACE		pthread_mutex_lock(&mutexInterface); // INFOA("\t interface LOCK_MUTEX_INTERFACE");
-#define	UNLOCK_MUTEX_INTERFACE	pthread_mutex_unlock(&mutexInterface); // INFOA("\t interface UNLOCK_MUTEX_INTERFACE");
+#define	LOCK_MUTEX_INTERFACE   pthread_mutex_lock(&mutexInterface); // INFOA("\t interface LOCK_MUTEX_INTERFACE");
+#define	UNLOCK_MUTEX_INTERFACE pthread_mutex_unlock(&mutexInterface); // INFOA("\t interface UNLOCK_MUTEX_INTERFACE");
 pthread_mutex_t mutexInterface;
 EventGroupHandle_t main_event_group;	// groupe d'évènement du pgm principal
 //////////////////////////
@@ -59,8 +55,7 @@ EventGroupHandle_t main_event_group;	// groupe d'évènement du pgm principal
 #ifdef CONFIG_CAPTEUR_DS18B20
 /*==========================================================*/
 /* lecture des données capteur DS18B20 */ /*
-                                             attendre a minima 30 s entre chaque mesure
-                                           */
+attendre a minima 30 s entre chaque mesure */
 /*==========================================================*/
 static float g_temperatureDS18B20 = 0.0f;
 
@@ -72,9 +67,9 @@ esp_err_t lect_DS18B20(float *temperature)
     gpio_set_direction(THERMOSTAT_DS18B20_GPIO, GPIO_MODE_OUTPUT_OD);
     gpio_set_level(THERMOSTAT_DS18B20_GPIO, 1);
     if (err == ESP_OK) {
-        LOCK_MUTEX_INTERFACE 			/* On verrouille le mutex */
+        LOCK_MUTEX_INTERFACE; /* On verrouille le mutex */
             g_temperatureDS18B20 = *temperature;
-        UNLOCK_MUTEX_INTERFACE;		/* On déverrouille le mutex */
+        UNLOCK_MUTEX_INTERFACE; /* On déverrouille le mutex */
         xEventGroupClearBits(main_event_group, ER_TEMP_INT);
     }
     else {
@@ -285,6 +280,12 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     wifi_init_sta();
+
+    // ---------- INITIALISE bus SPI
+#ifdef CONFIG_BUS_SPI
+    int host_spi = SPI2_HOST; // HSPI
+    init_SPI(CONFIG_GPIO_MOSI, CONFIG_GPIO_MISO, CONFIG_GPIO_SCLK, CONFIG_GPIO_CS, host_spi);
+#endif
 
     ds18b20_init(THERMOSTAT_DS18B20_GPIO);
 
