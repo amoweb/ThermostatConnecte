@@ -1,0 +1,92 @@
+# Kconfig
+# 
+# Le fichier Kconfig doit toujours être dans un composant
+# Chaque composant peut également avoir un fichier Kconfig, à côté de CMakeLists.txt. Celui-ci contient les paramètres de configuration à ajouter au menu de configuration de ce composant.
+# 
+# Deux façons d'utiliser Kconfig :
+# 	- dans un composant au niveau supérieur
+# 	- s'il est utilisé dans un projet, il doit être dans myproject/main car nous savons que main est un composant spécial et que
+# 		Kconfig ne peut être défini que dans un composant
+
+menu "Configuration connection Wifi"
+
+config SSID_POINT_ACCES
+    string "SSID du point d'accès"
+    default "esp32"
+    help
+        SSID (nom de réseau) diffusé par esp32.
+
+config MOT_PASSE_POINT_ACCES
+    string "mot de passe du point d'acces"
+    default "serveuresp"
+    help
+        Mot de passe pour se connecter au réseau crée par esp32, si MOT_PASSE_POINT_ACCES
+        est vide autorisation ouverte à tous.
+
+config NOMBRE_TENTATIVE_CONNECTION
+    int "nombre de tentative de connection de esp32 au réseau WIFI (2,4 Ghz)"
+    default 3
+    help
+        Défini le nombre de tentative de connection au réseau wifi préalablement enregistré.
+        Si impossible, re-enregistrer un nouveau réseau.
+
+config CANAL_WIFI_AP
+    int "Canal Wifi du Point d'Accès"
+    default 1
+    help
+        Attention: le canal doit correspondre à la région, sinon le point d'accès ne sera pas visible.
+
+config NBR_MAX_CONNECTIONS_AP
+    int "Nombre maxi de connection au serveur en mode AP"
+    default 2
+    help
+        Le nombre maxi est de 4.
+
+config NOM_HOTE_MDNS
+    string "Nom de l'hote mdns"
+    default "esp32"
+    help
+        nom de l'hote mdns
+
+config TACHE_ETAT_WIFI
+    bool "Lance la tache etat_wifi"
+    default y
+    help
+        Lance le task "etat_wifi" pour indiquer l'état de la connection wifi et modifier la configuration.
+
+# config LED_CONNECTION
+#     bool "Utiliser une led pour visualiser l'état de la connection wifi"
+#     default y
+#     depends on TACHE_ETAT_WIFI
+#     help
+#         Si la led clignote rapidement alors esp32 n'a pas pu se connecter au wifi. 
+#         Se connecter au point d'acces de l'esp32 pour entrer SSID et mot de passe du wifi 
+#         auquel connecter esp32 (2,4 Ghz)
+# 
+# config GPIO_LED_CON
+#     int "GPIO à utiliser pour connecter la led"
+#     default 14
+#     depends on LED_CONNECTION
+#     help
+#         Choisir le GPIO à utiliser pour connecter la led.
+
+config BOUTON_AP
+    bool "Utiliser un bouton pour basculer en mode Point d'Accès 192.168.4.1"
+    default y
+    depends on TACHE_ETAT_WIFI
+    help
+        Utiliser un bouton pour basculer en mode Point d'Accès.
+        Permet de se connecter à l'ESP32 avec l'adresse 192.168.4.1 pour configurer le wifi.
+        Se connecter au point d'accès de l'esp32 pour entrer SSID et mot de passe du wifi 
+        auquel connecter esp32 (2,4 Ghz)
+
+config GPIO_BTN_AP
+    int "GPIO pour bouton de démarrage AP, par défaut 0 = bouton boot"
+    default 0
+    depends on BOUTON_AP
+    help
+        Numéro du GPIO à utiliser pour connecter le bouton pour lancer le démarrage du serveur en Point d'Accès.
+        Permet de configurer le Wifi et la mise à jour OTA.
+        Appuyer sur le bouton dans les 10 secondes suivant le reset.
+
+endmenu

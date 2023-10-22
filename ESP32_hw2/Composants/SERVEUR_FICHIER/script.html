@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<meta charset="utf-8">
+<body>
+<head></head>
+
+<table class="fixed" border="0">
+  <col width="300px" /><col width="800px" />
+  <tr><td>
+    <h2>Finder ESP32</h2>
+  </td><td>
+    <table border="0">
+      <tr>
+        <td>
+          <label for="newfile">Télécharger un fichier</label>
+        </td>
+        <td colspan="2">
+          <input id="newfile" type="file" onchange="setpath()" style="width:100%;">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="filepath">Définir le chemin sur le serveur</label>
+        </td>
+        <td>
+          <input id="filepath" type="text" style="width:100%;">
+        </td>
+        <td>
+          <button id="upload" type="button" onclick="upload()">Télécharger</button>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+<script>
+function setpath() {
+  var default_path = document.getElementById("newfile").files[0].name;
+  document.getElementById("filepath").value = default_path;
+}
+function upload() {
+  var filePath = document.getElementById("filepath").value;
+  var upload_path = "/upload/" + filePath;
+  var fileInput = document.getElementById("newfile").files;
+
+//   Taille maximale d'un fichier individuel. S'assurer que la valeur est la même que celle définie dans serveurFichier.c
+  var MAX_FILE_SIZE = 200*1024;
+  var MAX_FILE_SIZE_STR = "200KB";
+
+  if (fileInput.length == 0) {
+    alert("Aucun fichier sélectionné!");
+  } else if (filePath.length == 0) {
+    alert("Le chemin du fichier sur le serveur n'est pas défini!");
+  } else if (filePath.indexOf(' ') >= 0) {
+    alert("Le chemin du fichier sur le serveur ne peut pas contenir d'espaces!");
+  } else if (filePath[filePath.length-1] == '/') {
+    alert("Nom de fichier non spécifié après le chemin!");
+  } else if (fileInput[0].size > 200*1024) {
+    alert("La taille du fichier doit être inférieure à 200Ko!");
+  } else {
+    document.getElementById("newfile").disabled = true;
+    document.getElementById("filepath").disabled = true;
+    document.getElementById("upload").disabled = true;
+
+    var file = fileInput[0];
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (xhttp.readyState == 4) {
+        if (xhttp.status == 200) {
+          document.open();
+          document.write(xhttp.responseText);
+          document.close();
+        } else if (xhttp.status == 0) {
+          alert("Le serveur a brusquement fermé la connexion !");
+          location.reload()
+        } else {
+          alert(upload_path + " Erreur: " + xhttp.status + " !\n" + xhttp.responseText);
+          location.reload()
+        }
+      }
+    };
+    xhttp.open("POST", upload_path, true);
+    xhttp.send(file);
+  }
+}
+</script>
+
+<table class="fixed" border="1">
+<col width="800px" /><col width="300px" /><col width="300px" /><col width="100px" />
+<thead><tr><th>Nom</th><th>Type</th><th>Taille (Bytes)</th><th>Supprimer</th></tr></thead>
+<tbody>

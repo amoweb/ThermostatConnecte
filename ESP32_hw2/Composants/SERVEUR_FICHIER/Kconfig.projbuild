@@ -1,0 +1,16 @@
+menu "Configuration serveur de fichiers http"
+
+    config DOSSIER_DE_BASE
+        string "Nom du dossier de base du serveur de fichier"
+        default "fichier"
+        help
+            Racine du serveur de fichier.
+            
+    config HTTPD_CONN_CLOSE_HEADER
+        bool "Envoyer un en-tête de fermeture de connexion à partir des gestionnaires de demandes"
+        default y
+        help
+            Si cet élément de configuration est défini,l'en-tête Connection: close sera défini dans les gestionnaires.
+            Cela ferme la connexion HTTP et libère instantanément le serveur.
+
+endmenu

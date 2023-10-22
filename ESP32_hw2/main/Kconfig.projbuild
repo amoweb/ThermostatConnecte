@@ -1,0 +1,197 @@
+menu "Configuration Main"
+      config CARTE_PERSO
+      bool "Type de carte utilisée y = carte perso, n = carte support"
+      default y
+      help
+        Pour définir les pins en fonction de la carte utilisée
+
+    config LED_CONNECTION
+        bool "Utiliser une led pour visualiser l'état de la connection wifi"
+        default y
+        help
+            Si la led clignote rapidement alors esp32 n'a pas pu se connecter au wifi.   
+            Se connecter au point d'acces de l'esp32 pour entrer SSID et mot de passe du wifi
+            auquel connecter esp32 (2,4 Ghz).
+            
+            A NOTER : LED_CONNECTION est initialisée et utilisée par le module WIFI_CONFIG.
+
+    config GPIO_LED_CON
+        int "numéro GPIO à utiliser pour connecter la led info connection"
+        depends on LED_CONNECTION
+        default "23" if CARTE_PERSO
+        default "14" if !CARTE_PERSO
+        help
+            Choisir le GPIO à utiliser pour connecter la led : 23 pour carte perso.
+
+    config GPIO_LED2
+        int "numéro GPIO à utiliser pour connecter la led2"
+        depends on CARTE_PERSO
+        default "22"
+        help
+            Choisir le GPIO à utiliser pour connecter la led2 : 22 pour carte perso.
+
+    config BUS_SPI
+    bool "Utiliser le bus SPI"
+    default y
+    help
+        Permet de configure le bus SPI 
+
+    if BUS_SPI
+      choice HSPI_HOST
+          prompt "Choix du bus SPI"
+          default HSPI
+          help
+              Bus HSPI = SPI2, VSPI = SPI3.
+
+          config HSPI
+              bool "bus HSPI = SPI2"
+          config VSPI
+              bool "bus VSPI = SPI3"
+      endchoice
+    
+      config GPIO_MOSI
+          int "numéro GPIO signal MOSI"
+          default "13" if CARTE_PERSO
+          default "27" if !CARTE_PERSO
+          help
+              HSPID : MOSI = 13.
+
+      config GPIO_MISO
+          int "numéro GPIO signal MISO"
+          default "12" if CARTE_PERSO
+          default "33" if !CARTE_PERSO
+         help
+              HSPIQ = MISO = 12.
+
+      config GPIO_SCLK
+          int "numéro GPIO signal SCLK"
+          default "14" if CARTE_PERSO
+          default "26" if !CARTE_PERSO
+          help
+              HSPICLK = CLK = 14.
+
+      config GPIO_CS
+          int "numéro GPIO signal CS"
+          default "15" if CARTE_PERSO
+          default "25" if !CARTE_PERSO
+          help
+              HSPICS0 = CS0 = 15.
+              
+      config GPIO_IRQ_RFM12
+          int "numéro GPIO entree interruption"
+          default "27" if CARTE_PERSO
+          default "32" if !CARTE_PERSO
+          depends on BUS_SPI
+          help
+              GPIO entrée interruption cablee sur sortie IRQ du RFM12.
+              "27" si CARTE_PERSO
+              "32" si !CARTE_PERSO
+
+    endif
+
+    config BUS_ONE_WIRE
+      bool "Créer un bus One Wire"
+      default y
+      help
+          Permet de configurer un bus One Wire 
+
+    if BUS_ONE_WIRE
+      config GPIO_ONE_WIRE
+          int "numéro GPIO one wire : 32 pour carte perso"
+          default "32" if CARTE_PERSO
+          default "2" if !CARTE_PERSO
+          help
+              numéro du GPIO pour données One Wire : 32 pour carte perso
+      menu "Capteur One Wire"
+        config ONE_WIRE_INTERNAL_PULLUP
+            bool "Enable internal pull-up resistor"
+            default n
+            help
+              Check this option if you don't have external pull-up resistor on data GPIO.   
+              DHT sensors that come mounted on a PCB generally have pull-up resistors on the data pin.   
+              But for stable operation, it is recommended to provide an external pull-up resistor.   
+          
+        choice CAPTEUR_ONE_WIRE
+            prompt "Type de capteur"
+            default TYPE_DS18B20
+            config TYPE_DHT
+                bool "USE_DHT"
+            config TYPE_DS18B20
+                bool "USE_DS18B20"
+        endchoice
+
+        choice TYPE_DHT
+            prompt "Type de capteur"
+            default TYPE_DHT11
+            depends on TYPE_DHT
+            config TYPE_DHT11
+                bool "DHT11"
+            config TYPE_AM2301
+                bool "DHT21/DHT22/AM2301/AM2302/AM2321"
+            config TYPE_SI7021
+                bool "Itead Si7021"
+        endchoice
+
+        config CAPTEUR_DS18B20
+            bool "utiliser un capteur DS18B20 ?"
+            default y
+            depends on TYPE_DS18B20
+            help
+                pour configurer et utiliser un capteur de type DS18B20
+      endmenu
+    endif
+
+    config LED_RGB
+        bool "utiliser des leds RGB"
+        default y
+        help
+            Utiliser les fonctions PWM de la bibliothèque ledc
+
+    if LED_RGB
+      config GPIO_LED_R
+          int "GPIO led Red"
+          default "33"
+
+      config GPIO_LED_G
+          int "GPIO led Green"
+          default "25"
+
+      config GPIO_LED_B
+          int "GPIO led Blue"
+          default "26"
+    endif
+
+    config Homekit
+        bool "Utiliser HomeKit"
+        default y
+
+    if Homekit
+      menu "Configuration code HomeKit"
+
+          config USE_HARDCODED_SETUP_CODE
+              bool "Use hard-coded setup code"
+              default y
+              help
+                  HomeKit does not recommend having the setup code programmed in the accessory as is.
+                  Instead, it expects setup info (salt-verifier pair) generated for the given setup code.
+                  Use this option only for testing purposes. For production, the setup info should be
+                  used.
+
+          config SETUP_CODE
+              string "HomeKit Setup Code"
+              default "111-22-333"
+              depends on USE_HARDCODED_SETUP_CODE
+              help
+                  Setup code to be used for HomeKot pairing, if hard-coded setup code is enabled.
+
+          config SETUP_ID
+              string "HomeKit Setup Id"
+              default "ES32"
+              depends on USE_HARDCODED_SETUP_CODE
+              help
+                  Setup id to be used for HomeKot pairing, if hard-coded setup code is enabled.
+
+      endmenu
+    endif
+endmenu
+

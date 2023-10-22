@@ -1,0 +1,13 @@
+	menu "Configuration LED RGB"
+    depends on LED_RGB
+    
+    config GAMMA_CORRECTION_WITH_LUT
+        bool "Use look up table to do gamma correction"
+        default n
+        help
+            Par défaut, la correction gamma est réalisée par le biais de l'opération de puissance mathématique.
+            Cela nécessite un calcul par le système. Avec cette option activée, la correction gamma sera basée 
+            sur une table de recherche. Notez que le tableau de recherche fourni ne concerne que un facteur gamma de 2,6.
+
+
+	endmenu
