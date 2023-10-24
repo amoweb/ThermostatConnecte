@@ -16,6 +16,13 @@ idf_component_register(
     "device/BUS_SPI/bus_spi.c"
     INCLUDE_DIRS
     "device/ONE_WIRE/include/"
+    REQUIRES
+    driver
+    esp_wifi
+    nvs_flash
+    spiffs
+    esp_http_server
+    esp_eth
 )
 
 include_directories(

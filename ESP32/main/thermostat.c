@@ -111,15 +111,16 @@ void gestionMiseAJour()
        efectue la mise à jour de l'interface html et du hardware
      */
 
+#if 1
     while(1) {
         errRFM12 = ESP_OK;
 
         // ======== test si reception data RFM12
         // NOTE FREQ_BCLE assure le temps d'attente dans la boucle. A ajuster si modification du débit RFM12 ?
-        if(recu != RECU) {		
+        if(recu != RECU) {
             if(xQueueReceive(E_R_RFM12->IT_queue, &E_R_RFM12->octetRecu, FREQ_BCLE / portTICK_PERIOD_MS)) {
                 recu = reception_RFM12(E_R_RFM12);
-                // printf("RFM recu %i info %i oct 0x%02X", recu, E_R_RFM12->octetRecu);
+                printf("RFM recu %i info %i oct", recu, E_R_RFM12->octetRecu);
             }
             else {
                 E_R_RFM12->result = VIDE;
@@ -130,6 +131,7 @@ void gestionMiseAJour()
             // ======== si réception RFM12 : mise à jour interface	
             if(recu == RECU) {
                 stopIT_RFM12(E_R_RFM12);
+                printf("---------------- RFM12 line %d\n", __LINE__);
                 // copie les data
                 for(int i=0; i<SIZE_FIFO; i++) {
                     bufRX[i] = E_R_RFM12->bufRX[i];
@@ -137,9 +139,11 @@ void gestionMiseAJour()
                 // teste ID du module pour éliminer les messages envoyés par d'autres modules
                 // ======== module S_RFM_1 "SER11" : bouton + led
                 if(CMP_ID_RFM12(S_RFM_1) == 0) {
+                    printf("---------------- RFM12 line %d\n", __LINE__);
                 }
                 // ======== module S_RFM_2	: DS18B20
                 else if(CMP_ID_RFM12(S_RFM_2) == 0)	{
+                    printf("---------------- RFM12 line %d\n", __LINE__);
                     tempRFM12 = 0.0f;
                     tempRFM12 = ((bufRX[RFM_DATA+1] << 8) | bufRX[RFM_DATA]) / 16.0f;
                 }
@@ -153,6 +157,7 @@ void gestionMiseAJour()
 
                 // teste le premier octet des data envoyé par le module RFM12 pour vérifier son état
                 if(errRFM12 == ESP_OK && bufRX[RFM_ETAT] != 0) 	/* si erreur */ {
+                    printf("RFM12 line %d\n", __LINE__);
                     errRFM12 = ESP_FAIL;
                     xEventGroupSetBits(main_event_group, ER_RFM12);
                     if(bufRX[RFM_ETAT] & DEFAUT_BAT) {
@@ -172,6 +177,7 @@ void gestionMiseAJour()
                 }
                 // message reçu par RFM12 OK
                 if(errRFM12 == ESP_OK) {
+                    printf("---------------- RFM12 line %d\n", __LINE__);
                     LOCK_MUTEX_INTERFACE /* On verrouille le mutex */
                     rfm12_receive_handler(bufRX);
                     UNLOCK_MUTEX_INTERFACE;		/* On déverrouille le mutex */
@@ -198,7 +204,7 @@ void gestionMiseAJour()
                     // (les modules envoient une salve de trois messages)
                     vTaskDelay(300 / portTICK_PERIOD_MS);
 #endif
-#ifdef CONFIG_CAPTEUR_DS18B20
+#if CONFIG_CAPTEUR_DS18B20
                     // NOTE :  le délai de conversion du DS18B20 est de 750 ms
                     errCaptInt = lect_DS18B20(&temperature);
                     if((errCaptInt == ESP_OK) & (errRFM12 == ESP_OK)) {
@@ -211,7 +217,7 @@ void gestionMiseAJour()
                         printf("ext\t%0.3f\tint\terreur", tempRFM12);
                     }
 #endif
-                }	
+                }
                 startIT_RFM12(E_R_RFM12);
             }
         }
@@ -222,10 +228,11 @@ void gestionMiseAJour()
             LOCK_MUTEX_INTERFACE /* On verrouille le mutex */
                 // si modification via interface web met à jour la "base de données"
                 //if(ptrEtatObj->obj_modif != NULL) {
-                //    stopIT_RFM12(E_R_RFM12);
+                // stopIT_RFM12(E_R_RFM12);
+                // printf("---------------- RFM12 line %d\n", __LINE__);
                 //    ptrEtatObj->obj_modif->fonctionCtrl(ptrEtatObj->obj_modif, premiere);
                 //    ptrEtatObj->obj_modif = NULL;
-                //    startIT_RFM12(E_R_RFM12);
+                startIT_RFM12(E_R_RFM12);
                 //}
             UNLOCK_MUTEX_INTERFACE;		/* On déverrouille le mutex */
 
@@ -249,10 +256,35 @@ void gestionMiseAJour()
 #endif
                 startIT_RFM12(E_R_RFM12);
                 xEventGroupSetBits(main_event_group, ER_RFM12);
-                // printf("perte signal RFM12");
+                printf("perte signal RFM12");
             }
         }
     }
+#else
+    TickType_t delaiBref = 150 / portTICK_PERIOD_MS;
+    TickType_t delaiMoyen = 350 / portTICK_PERIOD_MS;
+    TickType_t delaiLong = 500 / portTICK_PERIOD_MS;
+
+	EventBits_t uxBits;
+    while(1) {
+        uxBits = xEventGroupWaitBits(
+                main_event_group,    								// The event group being tested.
+                ER_RFM12 | ER_TEMP_INT,  	// The bits within the event group to wait for.
+                pdFALSE,         										// BIT should not be cleared before returning.
+                pdFALSE,        											// Don't wait for both bits, either bit will do.
+                delaiBref ); 												// Wait a maximum of 100ms for either bit to be set.
+
+        if(uxBits & (ER_RFM12 | ER_TEMP_INT)) {
+            gpio_set_level(CONFIG_GPIO_LED_CON, 1);
+            vTaskDelay(delaiBref);
+            gpio_set_level(CONFIG_GPIO_LED_CON, 0);
+            vTaskDelay(delaiMoyen);
+        }
+        else {
+            vTaskDelay(delaiLong);
+        }
+    }
+#endif
 }
 
 
@@ -269,6 +301,9 @@ void app_main(void)
 {
     printf("Started.\n");
 
+	vTaskDelay(1000/portTICK_PERIOD_MS);
+
+#if 0
     static httpd_handle_t server;
 
     //Initialize NVS
@@ -281,18 +316,28 @@ void app_main(void)
 
     wifi_init_sta();
 
+#else
+    esp_err_t ret;
+#endif
+
     // ---------- INITIALISE bus SPI
 #ifdef CONFIG_BUS_SPI
     int host_spi = SPI2_HOST; // HSPI
-    init_SPI(CONFIG_GPIO_MOSI, CONFIG_GPIO_MISO, CONFIG_GPIO_SCLK, CONFIG_GPIO_CS, host_spi);
+    ret = init_SPI(CONFIG_GPIO_MOSI, CONFIG_GPIO_MISO, CONFIG_GPIO_SCLK, CONFIG_GPIO_CS, host_spi);
+    if(ret != ESP_OK)
+    {
+        printf("init_SPI: error %d\n", ret);
+    }
 #endif
-
-    ds18b20_init(THERMOSTAT_DS18B20_GPIO);
 
     //tmp175_alt_init();
 
     //led_init(THERMOSTAT_LED_GPIO);
     //relay_init(THERMOSTAT_RELAY_GPIO);
+
+
+#if 0
+    ds18b20_init(THERMOSTAT_DS18B20_GPIO);
 
     server = start_webserver();
 
@@ -355,6 +400,7 @@ void app_main(void)
         }
         return;
     }
+#endif
 
     init_gestionMiseAJour();
 
@@ -365,6 +411,33 @@ void app_main(void)
     bool preIsPresent = false;
     bool heat = false;
     while(true) {
+        EventBits_t uxBits;
+        // clignotement rapide CONFIG_GPIO_LED_CON = défaut
+        TickType_t delaiBref = 150 / portTICK_PERIOD_MS;
+        TickType_t delaiMoyen = 350 / portTICK_PERIOD_MS;
+        // flash CONFIG_GPIO_LED2 = fonctionnement correct
+        TickType_t delaiLong = 500 / portTICK_PERIOD_MS;
+        uxBits = xEventGroupWaitBits(
+                main_event_group, // The event group being tested.
+                ER_RFM12 | ER_TEMP_INT, // The bits within the event group to wait for.
+                pdFALSE, // BIT should not be cleared before returning.
+                pdFALSE, // Don't wait for both bits, either bit will do.
+                delaiMoyen ); // Wait a maximum of 100ms for either bit to be set.
+
+		if((uxBits & (ER_RFM12 | ER_TEMP_INT))) {
+            printf("Message reçu depuis RFM12\n");
+        }
+
+		if((uxBits & (ER_RFM12))) {
+            printf("Message reçu depuis RFM12 : ER_RFM12 \n");
+            xEventGroupClearBits(main_event_group, ER_RFM12);
+        }
+		if((uxBits & (ER_TEMP_INT))) {
+            printf("Message reçu depuis RFM12 : ER_TEMP_INT \n");
+            xEventGroupClearBits(main_event_group, ER_TEMP_INT);
+        }
+
+        
         double temperaturePresence;
         double temperatureAbsence;
         get_temperature_target(&temperaturePresence, &temperatureAbsence);
@@ -373,7 +446,7 @@ void app_main(void)
         // Thermomètre interne
         float tmpFloat = 0.0;
 
-        lect_DS18B20(&tmpFloat);
+        //lect_DS18B20(&tmpFloat);
 
         float tmpFloatOneWire = 0.0;
         ds18b20_measure(THERMOSTAT_DS18B20_GPIO, &tmpFloatOneWire);
@@ -436,7 +509,9 @@ void app_main(void)
 
     fflush(stdout);
 
+#if 0
     stop_webserver(server);
+#endif
     //tmp175_alt_stop();
 
     //esp_restart();

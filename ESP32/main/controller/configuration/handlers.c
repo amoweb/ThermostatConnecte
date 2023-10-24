@@ -237,6 +237,8 @@ const char* http_get_handler(const char* uri)
 
 void rfm12_receive_handler(unsigned char* bufRX)
 {
+    printf("rfm12_receive_handler\n");
+
 #if defined(__linux__) || OSX
     uint recu = 0;
     recu = bufRX[0];
