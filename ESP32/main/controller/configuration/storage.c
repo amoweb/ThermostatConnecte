@@ -117,10 +117,6 @@ struct time get_current_time()
     rem = rem - (t.hour * 60 * 60);
 
     t.minute = rem / 60;
-
-    rem = rem - (t.minute * 60);
-
-    t.second = rem;
     
     return t;
 }

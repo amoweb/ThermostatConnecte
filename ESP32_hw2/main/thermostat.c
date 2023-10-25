@@ -524,6 +524,7 @@ void app_main()
     // ---------- indication de l'état système via LED_CONN
     EventBits_t uxBits;
     // clignotement rapide CONFIG_GPIO_LED_CON = défaut
+    TickType_t delaiTresBref = 75 / portTICK_PERIOD_MS;
     TickType_t delaiBref = 150 / portTICK_PERIOD_MS;
     TickType_t delaiMoyen = 350 / portTICK_PERIOD_MS;
     // flash CONFIG_GPIO_LED2 = fonctionnement correct
@@ -553,6 +554,9 @@ void app_main()
             vTaskDelay(delaiMoyen);
         }
         else {
+            gpio_set_level(CONFIG_GPIO_LED_CON, 1);
+            vTaskDelay(delaiLong);
+            gpio_set_level(CONFIG_GPIO_LED_CON, 0);
             vTaskDelay(delaiLong);
         }
 
@@ -568,6 +572,18 @@ void app_main()
         hysteresis_step(temperature, &heat);
         //led_set_level(THERMOSTAT_RELAY_GPIO, heat);
         //led_set_level(THERMOSTAT_LED_GPIO, !heat); // false = on
+
+
+        if(heat)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                gpio_set_level(CONFIG_GPIO_LED_CON, 1);
+                vTaskDelay(delaiTresBref);
+                gpio_set_level(CONFIG_GPIO_LED_CON, 0);
+                vTaskDelay(delaiTresBref);
+            }
+        }
 
         printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 

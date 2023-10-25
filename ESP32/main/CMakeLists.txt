@@ -1,36 +1,4 @@
-idf_component_register(
-    SRCS
-    "thermostat.c"
-    "network/wifi/wifi.c"
-    "network/http/http.c"
-    "device/TMP175_alt/tmp175.c"
-    "device/relay/relay.c"
-    "device/LED/LED.c"
-    "device/pushbutton/pushbutton.c"
-    "controller/hysteresis/hysteresis.c"
-    "controller/configuration/storage.c"
-    "controller/configuration/handlers.c"
-    "controller/estimator/estimator.c"
-    "device/ONE_WIRE/onewire.c"
-    "device/RFM12/RFM12.c"
-    "device/BUS_SPI/bus_spi.c"
-    INCLUDE_DIRS
-    "device/ONE_WIRE/include/"
-    REQUIRES
-    driver
-    esp_wifi
-    nvs_flash
-    spiffs
-    esp_http_server
-    esp_eth
-)
-
-include_directories(
-    "device/BUS_SPI/include"
-    "device/RFM12/include"
-)
-
-#"device/LM35/LM35.c" 
+idf_component_register(SRCS "thermostat.c" "network/wifi/wifi.c" "network/http/http.c" "device/TMP175_alt/tmp175.c" "device/relay/relay.c" "device/LED/LED.c" "device/LM35/LM35.c" "device/pushbutton/pushbutton.c" "controller/hysteresis/hysteresis.c" "controller/configuration/storage.c" "controller/configuration/handlers.c" "controller/estimator/estimator.c" INCLUDE_DIRS "")
 
 # Create a SPIFFS image from the contents of the 'spiffs_image' directory
 # that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that

@@ -10,7 +10,6 @@
 #include "../../controller/estimator/estimator.h"
 
 #include "../../config.h"
-#include "../../device/RFM12/include/RFM12.h"
 
 void http_post_handler_time_date(const char* uri, const char* data)
 {
@@ -20,11 +19,7 @@ void http_post_handler_time_date(const char* uri, const char* data)
 
     const char* string = strstr(data, "day=");
 
-    unsigned int day, hour, minute;
-    sscanf(string, "day=%d&hour=%d&minute=%d", &day, &hour, &minute);
-    t.day = (char)day;
-    t.hour = (char)hour;
-    t.minute = (char)minute;
+    sscanf(string, "day=%d&hour=%d&minute=%d", &t.day, &t.hour, &t.minute);
 
     printf("SET hour=%d, minute=%d, day=%d\n", t.hour, t.minute, t.day);
 
@@ -126,6 +121,7 @@ const char* http_get_handler(const char* uri)
 
         str[0] = 0;
 
+        unsigned int pos = 0;
         for(int partNum = 0; partNum < 2; partNum++) {
             unsigned int sizePart = 0;
             stats_record_s* part = NULL;
@@ -235,33 +231,4 @@ const char* http_get_handler(const char* uri)
     return str;
 }
 
-void rfm12_receive_handler(unsigned char* bufRX)
-{
-    printf("rfm12_receive_handler\n");
 
-#if defined(__linux__) || OSX
-    uint recu = 0;
-    recu = bufRX[0];
-    printf("hardRFM12[%i] recu : %i octets : ", __LINE__, recu);
-    for(int i=0; i<SIZE_DATA; i++) {
-        printf("0x%02X ", bufRX[i+1]);
-    }
-    printf("\n");
-#endif
-
-    // ======== module S_RFM_1	: LED
-    if(strncmp((char*)bufRX+RFM_ID, S_RFM_1, 5) == 0)	{
-        // bool active = bufRX[RFM_DATA] ? 1 : 0;
-        return;
-    }
-    // ======== module S_RFM_2	: DS18B20
-    else if(strncmp((char*)bufRX+RFM_ID, S_RFM_2, 5) == 0)	{
-        float result = 0.0f;
-        int16_t raw = (bufRX[RFM_DATA+1] << 8) | bufRX[RFM_DATA];
-        result = raw / 16.0f;
-
-        printf("DS18B20 temperature recue %f °C\r", result);
-
-        // TODO
-    }
-}
