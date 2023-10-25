@@ -2,7 +2,6 @@ idf_component_register(
     SRCS
     "thermostat.c"
     "network/http/http.c"
-    "device/TMP175_alt/tmp175.c"
     "device/relay/relay.c"
     "device/LED/LED.c"
     "device/pushbutton/pushbutton.c"

@@ -316,44 +316,6 @@ void gestionMiseAJour(void *premiere) {
     }
 }
 
-/*==========================================================*/
-/* Initialise SPIFFS */ /* 
-                           return ESP_OK si SPIFFS est initialisé */
-/*==========================================================*/
-esp_err_t init_spiffs(void)
-{
-    //   ESP_LOGI(TAG, "Initialisation SPIFFS");
-
-    esp_vfs_spiffs_conf_t conf = {
-        .base_path = "",
-        .partition_label = NULL,
-        .max_files = 5,   // This sets the maximum number of files that can be open at the same time
-        .format_if_mount_failed = true
-    };
-
-    esp_err_t ret = esp_vfs_spiffs_register(&conf);
-    if (ret != ESP_OK) {
-        if (ret == ESP_FAIL) {
-            ESP_LOGE(TAG, "Erreur montage system de fichiers");
-        } else if (ret == ESP_ERR_NOT_FOUND) {
-            ESP_LOGE(TAG, "Erreur recherche partition SPIFFS");
-        } else {
-            ESP_LOGE(TAG, "Erreur Initialisation SPIFFS (%s)", esp_err_to_name(ret));
-        }
-        return ret;
-    }
-
-    size_t total = 0, used = 0;
-    ret = esp_spiffs_info(NULL, &total, &used);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Erreur d'accès aux informations de la partition SPIFFS (%s)", esp_err_to_name(ret));
-        return ret;
-    }
-
-    //   ESP_LOGW(TAG, "Taille partition : total = %d - utilise = %d", total, used);
-    return ESP_OK;
-}
-
 void init_gestionMiseAJour()
 {
     main_event_group = xEventGroupCreate();
@@ -423,11 +385,6 @@ void app_main()
 
     // ---------- INITIALISE la boucle d'évènements nécessaire pour le wifi, le serveur
     if(esp_event_loop_create_default() != ESP_OK) {
-        goto erreur;
-    }
-
-    /* ---------- INITIALISE file storage */
-    if(init_spiffs() != ESP_OK) {
         goto erreur;
     }
 
@@ -517,7 +474,7 @@ void app_main()
         } else {
             printf("Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
         }
-        //return;
+        return;
     }
 
 
