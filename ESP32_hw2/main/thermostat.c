@@ -56,12 +56,16 @@ REMARQUE : la modification des paramètres d'accès au réseau wifi ne fonctionn
 #include "RFM12.h"
 #include "onewire.h"
 
+#include "config.h"
+
 #include "network/http/http.h"
 
 #include "controller/configuration/storage.h"
 #include "controller/configuration/handlers.h"
 #include "controller/hysteresis/hysteresis.h"
 #include "controller/estimator/estimator.h"
+
+#include "device/relay/relay.h"
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* defines */
@@ -487,6 +491,7 @@ void app_main()
     // flash CONFIG_GPIO_LED2 = fonctionnement correct
     TickType_t delaiLong = 500 / portTICK_PERIOD_MS;
 
+    relay_init(THERMOSTAT_RELAY_GPIO);
     init_presence_array();
 
     stats_record_s record;
@@ -527,20 +532,8 @@ void app_main()
         UNLOCK_MUTEX_INTERFACE;		/* On déverrouille le mutex */
 
         hysteresis_step(temperature, &heat);
-        //led_set_level(THERMOSTAT_RELAY_GPIO, heat);
+        relay_set_level(THERMOSTAT_RELAY_GPIO, heat);
         //led_set_level(THERMOSTAT_LED_GPIO, !heat); // false = on
-
-
-        if(heat)
-        {
-            for(int i = 0; i < 5; i++)
-            {
-                gpio_set_level(CONFIG_GPIO_LED_CON, 1);
-                vTaskDelay(delaiTresBref);
-                gpio_set_level(CONFIG_GPIO_LED_CON, 0);
-                vTaskDelay(delaiTresBref);
-            }
-        }
 
         printf("%f : %s\n", temperature, (heat?"HEAT":"NO"));
 
@@ -592,12 +585,17 @@ void app_main()
 erreur:
     ESP_LOGE(TAG, " ============== ERREUR INIT main ============== ");
     printf("ERREUR REBOOT");
+    // Arrête le chauffage
+    relay_set_level(THERMOSTAT_RELAY_GPIO, false);
     while(1) {
-        // 		vTaskDelay(10000);
-        gpio_set_level(CONFIG_GPIO_LED_CON, 1);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
-        gpio_set_level(CONFIG_GPIO_LED_CON, 0);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(delaiLong);
+        for(int i = 0; i < 5; i++)
+        {
+            gpio_set_level(CONFIG_GPIO_LED_CON, 1);
+            vTaskDelay(delaiTresBref);
+            gpio_set_level(CONFIG_GPIO_LED_CON, 0);
+            vTaskDelay(delaiTresBref);
+        }
     }
 
 }
