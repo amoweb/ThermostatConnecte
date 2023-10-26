@@ -115,6 +115,13 @@ pthread_mutex_t mutexInterface;
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 EventGroupHandle_t main_event_group;	// groupe d'évènement du pgm principal
 
+// clignotement rapide CONFIG_GPIO_LED_CON = défaut
+TickType_t delaiTresBref = 75 / portTICK_PERIOD_MS;
+TickType_t delaiBref = 150 / portTICK_PERIOD_MS;
+TickType_t delaiMoyen = 350 / portTICK_PERIOD_MS;
+// flash CONFIG_GPIO_LED2 = fonctionnement correct
+TickType_t delaiLong = 500 / portTICK_PERIOD_MS;
+
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /*  fonctions globales */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -484,12 +491,6 @@ void app_main()
 
     // ---------- indication de l'état système via LED_CONN
     EventBits_t uxBits;
-    // clignotement rapide CONFIG_GPIO_LED_CON = défaut
-    TickType_t delaiTresBref = 75 / portTICK_PERIOD_MS;
-    TickType_t delaiBref = 150 / portTICK_PERIOD_MS;
-    TickType_t delaiMoyen = 350 / portTICK_PERIOD_MS;
-    // flash CONFIG_GPIO_LED2 = fonctionnement correct
-    TickType_t delaiLong = 500 / portTICK_PERIOD_MS;
 
     relay_init(THERMOSTAT_RELAY_GPIO);
     init_presence_array();
