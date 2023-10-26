@@ -496,7 +496,6 @@ void app_main()
     init_presence_array();
 
     stats_record_s record;
-    struct time t = get_current_time();
     bool preIsPresent = false;
     bool heat = false;
 
@@ -522,6 +521,8 @@ void app_main()
             gpio_set_level(CONFIG_GPIO_LED_CON, 0);
             vTaskDelay(delaiLong);
         }
+
+        struct time t = get_current_time();
 
         double temperaturePresence;
         double temperatureAbsence;
