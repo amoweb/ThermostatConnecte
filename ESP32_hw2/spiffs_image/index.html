@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <title>Thermostat</title> 
+    </head>
+    <body>
+        <h1>Température</h1>
+
+        <div id="currentTemperature"></div><br />
+
+        <form action="/heat" method="post" >
+            <label for="tmptargetname">Chauffer immédiatement&nbsp;</label><input type="text" size="6" id="tmptargetname" name="tmptargetname" value=""><input type="submit" value="Chauffer">
+        </form> 
+        
+
+        <form action="/target" method="post" >
+            <label for="tmptargetpresencename">Présence&nbsp;</label><input type="text" size="6" id="tmptargetpresencename" name="tmptargetpresencename" value=""><br />
+            <label for="tmptargetabsencename">Absence&nbsp;</label><input type="text" size="6" id="tmptargetabsencename" name="tmptargetabsencename" value=""><br />
+            <input type="submit" value="OK">
+        </form> 
+
+        <h1>Heure date</h1>
+        <form action="/time" method="post" >
+            <select name="day">
+                <option value="0">Lun</option>
+                <option value="1">Mar</option>
+                <option value="2">Mer</option>
+                <option value="3">Jeu</option>
+                <option value="4">Ven</option>
+                <option value="5">Sam</option>
+                <option value="6">Dim</option>
+            </select>
+            &nbsp;
+            <input type="number" size="3" id="hour" name="hour" value="10" />:
+            <input type="number" size="3" id="minute" name="minute" value="15" />
+            &nbsp;
+            <input type="submit" value="OK" />
+        </form>
+
+        <h1>Présence</h1>
+        <form action="/presence" method="post" >
+        <table>
+            <tr>
+                <th></th>
+                <th>Présence 1</th>
+                <th>Présence 2</th>
+            </tr>
+            <tr>
+                <td>Lun</td>
+                <td>
+                <input type="number" size="3" name="h0a">:<input type="number" size="3" name="m0a" />  -  
+                <input type="number" size="3" name="h0b">:<input type="number" size="3" name="m0b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h0c"/>:<input type="number" size="3" name="m0c" />  -  
+                <input type="number" size="3" name="h0d"/>:<input type="number" size="3" name="m0d" />
+                </td>
+            </tr>
+            <tr>
+                <td>Mar</td>
+                <td>
+                <input type="number" size="3" name="h1a">:<input type="number" size="3" name="m1a" />  -  
+                <input type="number" size="3" name="h1b">:<input type="number" size="3" name="m1b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h1c"/>:<input type="number" size="3" name="m1c" />  -  
+                <input type="number" size="3" name="h1d"/>:<input type="number" size="3" name="m1d" />
+                </td>
+            </tr>
+            <tr>
+                <td>Mer</td>
+                <td>
+                <input type="number" size="3" name="h2a">:<input type="number" size="3" name="m2a" />  -  
+                <input type="number" size="3" name="h2b">:<input type="number" size="3" name="m2b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h2c"/>:<input type="number" size="3" name="m2c" />  -  
+                <input type="number" size="3" name="h2d"/>:<input type="number" size="3" name="m2d" />
+                </td>
+            </tr><tr>
+                <td>Jeu</td>
+                <td>
+                <input type="number" size="3" name="h3a">:<input type="number" size="3" name="m3a" />  -  
+                <input type="number" size="3" name="h3b">:<input type="number" size="3" name="m3b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h3c"/>:<input type="number" size="3" name="m3c" />  -  
+                <input type="number" size="3" name="h3d"/>:<input type="number" size="3" name="m3d" />
+                </td>
+            </tr><tr>
+                <td>Ven</td>
+                <td>
+                <input type="number" size="3" name="h4a">:<input type="number" size="3" name="m4a" />  -  
+                <input type="number" size="3" name="h4b">:<input type="number" size="3" name="m4b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h4c"/>:<input type="number" size="3" name="m4c" />  -  
+                <input type="number" size="3" name="h4d"/>:<input type="number" size="3" name="m4d" />
+                </td>
+            </tr><tr>
+                <td>Sam</td>
+                <td>
+                <input type="number" size="3" name="h5a">:<input type="number" size="3" name="m5a" />  -  
+                <input type="number" size="3" name="h5b">:<input type="number" size="3" name="m5b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h5c"/>:<input type="number" size="3" name="m5c" />  -  
+                <input type="number" size="3" name="h5d"/>:<input type="number" size="3" name="m5d" />
+                </td>
+            </tr><tr>
+                <td>Dim</td>
+                <td>
+                <input type="number" size="3" name="h6a">:<input type="number" size="3" name="m6a" />  -  
+                <input type="number" size="3" name="h6b">:<input type="number" size="3" name="m6b" />
+                </td>
+                <td>
+                &nbsp;
+                <input type="number" size="3" name="h6c"/>:<input type="number" size="3" name="m6c" />  -  
+                <input type="number" size="3" name="h6d"/>:<input type="number" size="3" name="m6d" />
+                </td>
+            </tr>
+        </table>
+        <input type="submit" value="OK" />
+        <script type="text/javascript">
+
+            function asn(e,v) {
+                var x = document.getElementsByName(e);
+                x[0].value = v;
+            }
+
+            function updateField(id, e) {
+                var r = new XMLHttpRequest();
+                r.open("GET", e, true);
+                r.onreadystatechange = function () {
+                    if (r.readyState != 4 || r.status != 200) return;
+                    document.getElementById(id).value = r.responseText;
+                }
+                r.send();
+            }
+
+            var endpoint = {
+                tmptargetname: "/target",
+                tmptargetpresencename: "/target_presence",
+                tmptargetabsencename: "/target_absence"
+            };
+
+            for (var val in endpoint) {
+                updateField(val, endpoint[val]);
+            }
+
+            var r = new XMLHttpRequest();
+            r.open("GET", "/presence", true);
+            r.onreadystatechange = function () {
+                if (r.readyState != 4 || r.status != 200) return;
+                var a = JSON.parse(r.responseText).v;
+                for(var d=0; d<7; d++) {
+                    asn("h"+d+"a", a[d*8]);
+                    asn("m"+d+"a", a[d*8+1]);
+                    asn("h"+d+"b", a[d*8+2]);
+                    asn("m"+d+"b", a[d*8+3]);
+                    asn("h"+d+"c", a[d*8+4]);
+                    asn("m"+d+"c", a[d*8+5]);
+                    asn("h"+d+"d", a[d*8+6]);
+                    asn("m"+d+"d", a[d*8+7]);
+                }
+            }
+            r.send();
+
+            function update() {
+                var r = new XMLHttpRequest();
+                r.open("GET", "/temp");
+                r.onload = (e) => {
+                    var e = document.getElementById("currentTemperature");
+                    e.innerHTML = "Température actuelle : <b>" + r.responseText + "°C</b>";
+                }
+                r.send();
+            }
+
+            setInterval(update, 1000);
+        </script>
+    </body>
+</html>
+
