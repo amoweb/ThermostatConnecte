@@ -403,8 +403,8 @@ void app_main()
     init_SNTP();
 
     // ---------- INITIALISE la connection wifi
-    if(init_WIFI() != ESP_OK) {
-        goto erreur;
+    if (init_WIFI() != ESP_OK) {
+        printf("On continue sans wifi\n");
     }
 
     vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -417,9 +417,6 @@ void app_main()
     stop_etat_wifi();
 
     init_gestionMiseAJour();
-
-    // synchronise l'horloge interne avec serveur SNTP
-    maj_Heure();
 
     ESP_LOGI(TAG, "RAM interne disponible: %" PRIu32 " bytes", esp_get_free_internal_heap_size());
     ESP_LOGW(TAG, "Currently running partition: %s\r\n", partition->label);
@@ -499,6 +496,10 @@ void app_main()
     bool preIsPresent = false;
     bool heat = false;
 
+    uint32_t retryWifi = 0;
+
+    bool validDate = false;
+
     while(true) {
         //vTaskDelay(delaiLong);
 
@@ -509,17 +510,46 @@ void app_main()
                 pdFALSE,                // Don't wait for both bits, either bit will do.
                 delaiBref );            // Wait a maximum of 100ms for either bit to be set.
 
-        if((uxBits & (ER_RFM12 | ER_TEMP_INT)) | (info_wifi() != ESP_OK)) {
+        const int retwifi = info_wifi();
+        if((uxBits & (ER_RFM12 | ER_TEMP_INT)) || retwifi != ESP_OK) {
             gpio_set_level(CONFIG_GPIO_LED_CON, 1);
             vTaskDelay(delaiBref);
             gpio_set_level(CONFIG_GPIO_LED_CON, 0);
             vTaskDelay(delaiMoyen);
+
+            if (retwifi != ESP_OK)
+            {
+                printf("Wifi problem.\n");
+                if (retryWifi > 10)
+                {
+                    printf("Reconnection.\n");
+                    for(int i = 0; i < 10; i++)
+                    {
+                        gpio_set_level(CONFIG_GPIO_LED_CON, 1);
+                        vTaskDelay(delaiTresBref);
+                        gpio_set_level(CONFIG_GPIO_LED_CON, 0);
+                        vTaskDelay(delaiTresBref);
+                    }
+                    init_WIFI();
+                    retryWifi = 0;
+                }
+                retryWifi++;
+            }
         }
         else {
             gpio_set_level(CONFIG_GPIO_LED_CON, 1);
             vTaskDelay(delaiLong);
             gpio_set_level(CONFIG_GPIO_LED_CON, 0);
             vTaskDelay(delaiLong);
+        }
+
+
+        // synchronise l'horloge interne avec serveur SNTP
+        if (!validDate)
+        {
+            const struct tm currTime = maj_Heure();
+            validDate = (1900 + currTime.tm_year > 2023);
+            if (validDate) set_current_time_std(currTime);
         }
 
         struct time t = get_current_time();

@@ -136,6 +136,25 @@ struct time get_current_time()
     return t;
 }
 
+
+void set_current_time_std(struct tm t)
+{
+    struct time ti;
+    ti.hour = t.tm_hour;
+    ti.minute = t.tm_min;
+    ti.second = t.tm_sec;
+    if (t.tm_wday == 0)
+    {
+        ti.day = 6;
+    }
+    else
+    {
+        ti.day = t.tm_wday - 1;
+    }
+        
+    set_current_time(ti);
+}
+
 void set_current_time(struct time t)
 {
     printf("set_current_time\n");

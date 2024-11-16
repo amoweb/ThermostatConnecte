@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 /**
  * Store presence and absence temperature
@@ -47,6 +48,7 @@ struct time get_current_time();
   * @param[in] struct time
   */
 void set_current_time(struct time t);
+void set_current_time_std(struct tm t);
 
 /**
   * Returns true when time1 == time 2.

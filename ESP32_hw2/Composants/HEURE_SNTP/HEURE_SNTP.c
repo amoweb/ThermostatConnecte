@@ -1,7 +1,6 @@
 // initialise la mise à l'heure via un serveur SNTP
 
 #include <string.h>
-#include <time.h>
 #include <sys/time.h>
 #include "esp_system.h"
 #include "esp_event.h"
@@ -217,7 +216,7 @@ void init_SNTP(void) {
     ESP_LOGI(TAG, "Initializing SNTP");
     esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(CONFIG_SNTP_TIME_SERVER);
     config.start = false;                       // start SNTP service explicitly (after connecting)
-    config.server_from_dhcp = true;             // accept NTP offers from DHCP server, if any (need to enable *before* connecting)
+    config.server_from_dhcp = false;             // accept NTP offers from DHCP server, if any (need to enable *before* connecting)
     config.renew_servers_after_new_IP = true;   // let esp-netif update configured SNTP server(s) after receiving DHCP lease
     config.index_of_first_server = 1;           // updates from server num 1, leaving server 0 (from DHCP) intact
     // configure the event on which we renew servers
@@ -248,7 +247,8 @@ void sync_SNTP(void) {
 /* Synchronise date et heure suivant la time zone */ /* 
 	- démarre la connection au serveur SNTP s'il n'y pas eu de synchro précédemment */
 /*==========================================================*/
-void maj_Heure(void)
+
+struct tm maj_Heure(void)
 {
     char strftime_buf[64];
     time_t now;
@@ -263,6 +263,7 @@ void maj_Heure(void)
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "Date et heure courante à Saulce sur Rhone : %s", strftime_buf);
+    ESP_LOGI(TAG, "Date et heure courante : %s", strftime_buf);
+    return timeinfo;
 }
 

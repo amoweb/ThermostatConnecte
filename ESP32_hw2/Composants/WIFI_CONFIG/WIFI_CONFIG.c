@@ -632,7 +632,10 @@ int init_WIFI(void) {
 
 	// NOTE modif 
 	// attente que la connection WIFI soit établie
-	while(info_wifi() != ESP_OK) {
+	for(int retry = 0; retry < 10; retry++)
+    {
+        if (info_wifi() == ESP_OK)
+            break;
 		vTaskDelay(500 / portTICK_PERIOD_MS);
 	}
 
