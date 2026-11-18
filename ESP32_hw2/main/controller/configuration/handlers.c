@@ -256,7 +256,7 @@ void rfm12_receive_handler(unsigned char* bufRX)
         return;
     }
     // ======== module S_RFM_2	: DS18B20
-    else if(strncmp((char*)bufRX+RFM_ID, S_RFM_2, 5) == 0)	{
+    else if(strncmp((char*)bufRX+RFM_ID, S_RFM_2, 5) == 0)	{ // SE_12
         float result = 0.0f;
         int16_t raw = (bufRX[RFM_DATA+1] << 8) | bufRX[RFM_DATA];
         result = raw / 16.0f;

@@ -66,6 +66,7 @@ REMARQUE : la modification des paramètres d'accès au réseau wifi ne fonctionn
 #include "controller/estimator/estimator.h"
 
 #include "device/relay/relay.h"
+#include "device/LED/LED.h"
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* defines */
@@ -249,6 +250,7 @@ void gestionMiseAJour(void *premiere) {
 
                 // teste le premier octet des data envoyé par le module RFM12 pour vérifier son état
                 if(errRFM12 == ESP_OK && bufRX[RFM_ETAT] != 0) 	/* si erreur */ {
+                    led_set_level(CONFIG_GPIO_LED2, false);
                     errRFM12 = ESP_FAIL;
                     xEventGroupSetBits(main_event_group, ER_RFM12);
                     if(bufRX[RFM_ETAT] & DEFAUT_BAT) {
@@ -268,9 +270,10 @@ void gestionMiseAJour(void *premiere) {
                 }
                 // message reçu par RFM12 OK
                 if(errRFM12 == ESP_OK) {
+                    led_set_level(CONFIG_GPIO_LED2, true);
                     LOCK_MUTEX_INTERFACE; /* On verrouille le mutex */
-                    rfm12_receive_handler(bufRX);
-                    UNLOCK_MUTEX_INTERFACE;		/* On déverrouille le mutex */
+		    rfm12_receive_handler(bufRX);
+		    UNLOCK_MUTEX_INTERFACE;		/* On déverrouille le mutex */
                     xEventGroupClearBits(main_event_group, ER_RFM12);
                 }
                 E_R_RFM12->result = VIDE;
@@ -285,6 +288,7 @@ void gestionMiseAJour(void *premiere) {
                         LOCK_MUTEX_INTERFACE;
                         printf("Erreur du capteur sans fil, on lit le capteur interne.\n");
                         set_temperature(temperature);
+			led_set_level(CONFIG_GPIO_LED2, false);
                         UNLOCK_MUTEX_INTERFACE;
                     }
 #endif
@@ -321,7 +325,8 @@ void gestionMiseAJour(void *premiere) {
 #endif
                 startIT_RFM12(E_R_RFM12);
                 xEventGroupSetBits(main_event_group, ER_RFM12);
-                // printf("perte signal RFM12");
+                printf("perte signal RFM12");
+		led_set_level(CONFIG_GPIO_LED2, false);
             }
         }
     }
@@ -499,6 +504,8 @@ void app_main()
     uint32_t retryWifi = 0;
 
     bool validDate = false;
+
+    led_init(CONFIG_GPIO_LED2); // Etat du capteur
 
     while(true) {
         //vTaskDelay(delaiLong);

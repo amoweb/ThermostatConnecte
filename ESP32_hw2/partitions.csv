@@ -1,0 +1,22 @@
+# Le décalage représente l'adresse de partition dans le flash SPI, dont la taille de secteur est 
+# de 0x1000 (4 Ko). Ainsi, le décalage doit être un multiple de 4 Ko.
+# Les partitions de type app doivent être placées à des décalages alignés sur 0x10000 (64 K). 
+# Si vous laissez le champ de décalage vide, gen_esp32part.py alignera automatiquement la partition.
+# Les tailles et les décalages peuvent être spécifiés sous forme de nombres décimaux, 
+# de nombres hexadécimaux avec le préfixe 0x ou de multiplicateurs de taille K ou M (1024 et 1024*1024 octets).
+# Remarque: Si vous avez augmenté la taille du chargeur de démarrage, assurez-vous de mettre à jour 
+# les décalages pour éviter le chevauchement
+# Name,   Type, SubType, Offset,  Size, Flags
+
+#nvs,      data, nvs,     0x9000,  0x6000,
+#phy_init, data, phy,     0xf000,  0x1000,
+#factory,  app,  factory, 0x10000, 1M,
+#storage,  data, spiffs,  ,        1M,
+
+nvs,        data, nvs,     ,        0x4000
+otadata,    data, ota,     ,        0x2000
+phy_init,   data, phy,     ,        0x1000
+#factory,    0,    0,       ,        0x70000
+ota_0,      0,    ota_0,   ,        2M
+ota_1,      0,    ota_1,   ,        2M
+storage,  data,   spiffs,  ,        1M,
