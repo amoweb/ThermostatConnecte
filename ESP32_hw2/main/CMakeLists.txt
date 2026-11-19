@@ -2,6 +2,7 @@ idf_component_register(
     SRCS
     "thermostat.c"
     "network/http/http.c"
+    "network/data_uploader/data_uploader.c"
     "device/relay/relay.c"
     "device/LED/LED.c"
     "device/pushbutton/pushbutton.c"
@@ -11,7 +12,8 @@ idf_component_register(
     "controller/estimator/estimator.c"
     INCLUDE_DIRS
     "."
-    "include")
+    "include"
+    "network/data_uploader")
 
 # Créer une image SPIFFS à partir du contenu du répertoire 'spiffs_image' 
 # qui correspond à la partition nommée 'storage'. FLASH_IN_PROJECT indique 

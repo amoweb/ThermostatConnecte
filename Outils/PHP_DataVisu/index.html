@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thermostat — temperature history</title>
+<style>
+  :root {
+    --accent: #1565c0;
+    --heat: #ef5350;
+    --text: #212121;
+    --muted: #5f6368;
+    --line: #d0d4da;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f5f6f8;
+    color: var(--text);
+  }
+  header { padding: 10px 16px 2px; }
+  h1 { font-size: 1.05rem; margin: 0 0 2px; font-weight: 600; }
+  #status { font-size: .8rem; color: var(--muted); min-height: 1.1em; }
+  #status.error { color: #c62828; font-weight: 600; }
+
+  /* ---- Period bar (dual-handle slider) ---- */
+  #period { padding: 2px 16px 6px; }
+  #rangeLabel { display: block; font-size: .85rem; margin: 2px 0 6px; color: var(--text); }
+  #sliderWrap { position: relative; height: 34px; touch-action: none; }
+  #sliderWrap .track {
+    position: absolute; left: 0; right: 0; top: 14px; height: 6px;
+    border-radius: 3px; background: var(--line);
+  }
+  #sliderWrap .track.selection { background: rgba(21, 101, 192, .30); }
+  #sliderWrap input[type=range] {
+    position: absolute; left: 0; top: 0; width: 100%; height: 34px;
+    margin: 0; background: transparent; pointer-events: none;
+    -webkit-appearance: none; appearance: none;
+    outline: none;
+  }
+  /* The focused handle stays on top so overlapping handles remain grabbable. */
+  #sliderWrap input[type=range]:focus { z-index: 7; }
+  #rA { z-index: 5; }
+  #rB { z-index: 4; }
+  #sliderWrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    pointer-events: auto; cursor: ew-resize;
+    width: 16px; height: 32px; border-radius: 5px;
+    background: var(--accent); border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+  }
+  #sliderWrap input[type=range]::-moz-range-thumb {
+    pointer-events: auto; cursor: ew-resize;
+    width: 12px; height: 28px; border-radius: 5px;
+    background: var(--accent); border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+  }
+  #sliderWrap input[type=range]::-moz-range-track { background: transparent; }
+  .barHints {
+    display: flex; justify-content: space-between;
+    font-size: .72rem; color: var(--muted); margin-top: 2px;
+  }
+
+  main { flex: 1; min-height: 0; padding: 0 8px 6px; }
+  #chart { width: 100%; height: 100%; min-height: 240px; }
+
+  footer {
+    padding: 4px 16px 8px;
+    font-size: .72rem; color: var(--muted); text-align: center;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Connected thermostat — temperature history</h1>
+  <div id="status">Loading…</div>
+</header>
+
+<section id="period">
+  <span id="rangeLabel"></span>
+  <div id="sliderWrap">
+    <div class="track"></div>
+    <div class="track selection" id="selTrack"></div>
+    <input type="range" id="rA" min="0" max="0" value="0" step="1" aria-label="Period start">
+    <input type="range" id="rB" min="0" max="0" value="0" step="1" aria-label="Period end">
+  </div>
+  <div class="barHints"><span id="domainFrom"></span><span id="domainTo"></span></div>
+</section>
+
+<main><div id="chart"></div></main>
+
+<footer>
+  Wheel: zoom &nbsp;·&nbsp; Drag: pan &nbsp;·&nbsp; Bottom bar: zoom on range &nbsp;·&nbsp;
+  Toolbar: box zoom / restore / save image &nbsp;·&nbsp; Red background: heating ON &nbsp;·&nbsp;
+  Period is limited to 3 months
+</footer>
+
+<script src="echarts.common.min.js"></script>
+<script>
+'use strict';
+(function () {
+  var DAY_MS = 86400000;
+  var MAX_SPAN_DAYS = 92;        // hard cap: 3 months at a time
+  var MIN_ZOOM_MS = 15 * 60000; // chart zoom-in limit
+
+  var chart = null;
+  var domainStart = 0;  // local midnight of the oldest sample (epoch ms)
+  var domainDays = 1;   // number of selectable day slots on the bar
+  var loadToken = 0;    // discards responses from superseded requests
+
+  var rA = document.getElementById('rA');
+  var rB = document.getElementById('rB');
+  var selTrack = document.getElementById('selTrack');
+  var rangeLabel = document.getElementById('rangeLabel');
+  var domainFrom = document.getElementById('domainFrom');
+  var domainTo = document.getElementById('domainTo');
+  var statusEl = document.getElementById('status');
+  var chartEl = document.getElementById('chart');
+
+  // ---- date helpers (all in the browser's local timezone) ----
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtDate(ms) {
+    var d = new Date(ms);
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+  }
+  function fmtDateTime(ms) {
+    var d = new Date(ms);
+    return fmtDate(ms) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function startOfDay(ms) {
+    var d = new Date(ms);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+  // Local midnight of the i-th day after domainStart (DST-safe, calendar days).
+  function dayStart(i) {
+    var d = new Date(domainStart);
+    d.setDate(d.getDate() + i);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+  function dayEnd(i) { return dayStart(i + 1) - 1; }
+
+  function setStatus(msg, isError) {
+    statusEl.textContent = msg;
+    statusEl.className = isError ? 'error' : '';
+  }
+
+  // ---- period bar ----
+  function updateBar() {
+    var a = +rA.value, b = +rB.value;
+    var pct = function (v) { return domainDays > 1 ? (100 * v / (domainDays - 1)) : 0; };
+    selTrack.style.left = pct(a) + '%';
+    selTrack.style.width = (domainDays > 1 ? (pct(b) - pct(a)) : 100) + '%';
+    rangeLabel.textContent = fmtDate(dayStart(a)) + '  →  ' +
+      fmtDate(dayStart(b)) + '   (' + (b - a + 1) + ' day' + (b - a ? 's' : '') + ')';
+  }
+
+  function onFromInput() {
+    var a = Math.max(0, Math.min(domainDays - 1, +rA.value));
+    var b = +rB.value;
+    if (b < a) b = a;
+    if (b - a > MAX_SPAN_DAYS - 1) b = Math.min(domainDays - 1, a + MAX_SPAN_DAYS - 1);
+    rA.value = a; rB.value = b;
+    updateBar();
+  }
+
+  function onToInput() {
+    var b = Math.max(0, Math.min(domainDays - 1, +rB.value));
+    var a = +rA.value;
+    if (a > b) a = b;
+    if (b - a > MAX_SPAN_DAYS - 1) a = Math.max(0, b - (MAX_SPAN_DAYS - 1));
+    rA.value = a; rB.value = b;
+    updateBar();
+  }
+
+  function windowFrom() { return dayStart(+rA.value); }
+  function windowTo() { return dayEnd(+rB.value); }
+
+  // ---- data loading ----
+  function load() {
+    var from = windowFrom(), to = windowTo();
+    var token = ++loadToken;
+    setStatus('Loading…');
+    fetch('data.php?from=' + from + '&to=' + to)
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (payload) {
+        if (token !== loadToken) return;
+        if (payload.error) throw new Error(payload.error);
+        render(payload);
+      })
+      .catch(function (err) {
+        if (token !== loadToken) return;
+        setStatus('Error: ' + err.message, true);
+      });
+  }
+
+  function render(payload) {
+    var pts = payload.points || [];
+    var temp = [], heat = [];
+    for (var i = 0; i < pts.length; i++) {
+      temp.push([pts[i][0], pts[i][1]]);
+      heat.push([pts[i][0], pts[i][2]]);
+    }
+    chart.setOption({
+      dataZoom: [
+        { type: 'inside', startValue: payload.from, endValue: payload.to },
+        { type: 'slider', startValue: payload.from, endValue: payload.to }
+      ],
+      series: [
+        { id: 'heat', data: heat },
+        { id: 'temp', data: temp }
+      ]
+    });
+    setStatus(pts.length
+      ? pts.length.toLocaleString() + ' samples — ' + fmtDateTime(pts[0][0]) +
+        ' to ' + fmtDateTime(pts[pts.length - 1][0])
+      : 'No samples in this period');
+  }
+
+  // ---- chart ----
+  function tooltipFormatter(params) {
+    if (!params || !params.length) return '';
+    var temp = null, heating = 0;
+    for (var i = 0; i < params.length; i++) {
+      var p = params[i];
+      if (!p.value) continue;
+      if (p.seriesId === 'temp') temp = p.value[1];
+      else if (p.value[1]) heating = 1;
+    }
+    var html = '<b>' + fmtDateTime(params[0].value[0]) + '</b>';
+    if (temp !== null) html += '<br/>Temperature: <b>' + temp + ' °C</b>';
+    html += '<br/>Heating: <b style="color:#c62828">' + (heating ? 'ON' : 'OFF') + '</b>';
+    return html;
+  }
+
+  function initChart() {
+    chart = echarts.init(chartEl);
+    chart.setOption({
+      animation: false,
+      grid: { left: 64, right: 22, top: 46, bottom: 74 },
+      toolbox: {
+        top: 8, right: 12,
+        feature: {
+          dataZoom: {
+            yAxisIndex: 'none',
+            title: { zoom: 'Zoom on selection', back: 'Restore zoom' }
+          },
+          restore: { title: { text: 'Restore zoom' } },
+          saveAsImage: { title: { text: 'Save as image' }, name: 'thermostat' }
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'line' },
+        formatter: tooltipFormatter
+      },
+      xAxis: {
+        type: 'time',
+        axisLine: { lineStyle: { color: '#9aa0a6' } },
+        axisLabel: { hideOverlap: true }
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: '°C',
+          scale: true,
+          nameTextStyle: { color: '#5f6368' },
+          axisLabel: { formatter: '{value}' },
+          splitLine: { lineStyle: { color: '#e0e2e6' } }
+        },
+        { type: 'value', min: 0, max: 1, show: false } // hidden axis for the heating bands
+      ],
+      dataZoom: [
+        {
+          type: 'inside', xAxisIndex: 0,
+          filterMode: 'none', minValueSpan: MIN_ZOOM_MS,
+          zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: true
+        },
+        {
+          type: 'slider', xAxisIndex: 0,
+          filterMode: 'none', minValueSpan: MIN_ZOOM_MS,
+          height: 22, bottom: 10,
+          borderColor: '#c3c7cd',
+          fillerColor: 'rgba(21, 101, 192, .15)'
+        }
+      ],
+      series: [
+        {
+          // Red background where heating is 1: a 0/1 step line on the hidden
+          // axis, filled down to 0 => exact full-height red bands.
+          id: 'heat', name: 'Heating', type: 'line',
+          yAxisIndex: 1, step: 'end',
+          symbol: 'none', showSymbol: false,
+          silent: true, z: 2,
+          lineStyle: { opacity: 0 },
+          areaStyle: {
+            color: 'rgba(239, 83, 80, 0.18)',
+            opacity: 1,
+            origin: 'start'
+          },
+          emphasis: { disabled: true }
+        },
+        {
+          id: 'temp', name: 'Temperature', type: 'line',
+          yAxisIndex: 0, z: 3,
+          symbol: 'circle', showSymbol: false, connectNulls: false,
+          lineStyle: { width: 1.5, color: '#1565c0' },
+          itemStyle: { color: '#1565c0' }
+        }
+      ]
+    });
+  }
+
+  // ---- boot ----
+  function boot() {
+    fetch('data.php')
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (meta) {
+        if (meta.error) throw new Error(meta.error);
+        if (meta.min == null || meta.max == null) {
+          setStatus('No data recorded yet.');
+          return;
+        }
+        domainStart = startOfDay(meta.min);
+        domainDays = Math.round((startOfDay(meta.max) - domainStart) / DAY_MS) + 1;
+
+        rA.min = 0; rA.max = domainDays - 1;
+        rB.min = 0; rB.max = domainDays - 1;
+        var b = domainDays - 1;
+        var a = Math.max(0, b - (MAX_SPAN_DAYS - 1));
+        rA.value = a; rB.value = b;
+
+        domainFrom.textContent = fmtDate(domainStart);
+        domainTo.textContent = fmtDate(dayStart(domainDays - 1));
+
+        initChart();
+        updateBar();
+        load();
+      })
+      .catch(function (err) {
+        setStatus('Cannot load data: ' + err.message, true);
+      });
+  }
+
+  rA.addEventListener('input', onFromInput);
+  rB.addEventListener('input', onToInput);
+  rA.addEventListener('change', load);
+  rB.addEventListener('change', load);
+  window.addEventListener('resize', function () { if (chart) chart.resize(); });
+
+  boot();
+})();
+</script>
+</body>
+</html>

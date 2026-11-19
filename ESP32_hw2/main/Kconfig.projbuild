@@ -193,5 +193,26 @@ menu "Configuration Main"
 
       endmenu
     endif
+
+    config DATA_UPLOADER_ENABLED
+        bool "Activer l'envoi périodique des données vers un serveur distant"
+        default n
+        help
+            Si activé, les statistiques locales sont envoyées périodiquement
+            vers l'URL configurée au format attendu par thermostat.php.
+
+    if DATA_UPLOADER_ENABLED
+        config DATA_UPLOADER_URL
+            string "URL du endpoint distant (thermostat.php)"
+            default "http://example.com/thermostat.php"
+            help
+                URL complète vers laquelle les données seront POSTées.
+
+        config DATA_UPLOADER_API_KEY
+            string "Clé API pour l'envoi des données"
+            default "change-me"
+            help
+                Valeur du header X-API-Key attendu par thermostat.php.
+    endif
 endmenu
 

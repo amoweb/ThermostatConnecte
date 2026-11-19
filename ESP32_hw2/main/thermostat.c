@@ -59,6 +59,7 @@ REMARQUE : la modification des paramètres d'accès au réseau wifi ne fonctionn
 #include "config.h"
 
 #include "network/http/http.h"
+#include "network/data_uploader/data_uploader.h"
 
 #include "controller/configuration/storage.h"
 #include "controller/configuration/handlers.h"
@@ -507,6 +508,7 @@ void app_main()
 
     led_init(CONFIG_GPIO_LED2); // Etat du capteur
 
+    struct time lastUpload = get_current_time();
     while(true) {
         //vTaskDelay(delaiLong);
 
@@ -617,6 +619,16 @@ void app_main()
         record.slope = slope;
         record.heat = heat;
         stats_add_record(record);
+
+        // Upload les statistiques
+#if CONFIG_DATA_UPLOADER_ENABLED
+    const unsigned int durationSinceLastUploadMinutes = time_duration_minute(t, lastUpload);
+    if (durationSinceLastUploadMinutes > 20)
+    {
+        upload_data();
+        lastUpload = get_current_time();
+    }
+#endif
 
         preIsPresent = isPresent;
     }

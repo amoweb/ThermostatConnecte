@@ -3,6 +3,7 @@
 #include "storage.h"
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 static time_t timestamp_offset_seconds = 0;
 static time_t initial_time_seconds = 0;
@@ -297,7 +298,7 @@ void test_time()
     printf("test_time OK\n");
 }
 
-#define NB_STATS 500
+#define NB_STATS 250
 static stats_record_s stats[NB_STATS];
 static unsigned int stats_pos = -1;
 static bool stats_buffer_full = false;
