@@ -131,36 +131,27 @@ if (empty($tuples)) {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Remove duplicate raw tuples (same temperature, hour, minute, heating)
-// ---------------------------------------------------------------------------
-$seen   = [];
-$unique = [];
-foreach ($tuples as $t) {
-    $key = $t['hour'] . ':' . $t['minute'] . '|' . $t['temp'] . '|' . $t['heating'];
-    if (!isset($seen[$key])) {
-        $seen[$key] = true;
-        $unique[]   = $t;
-    }
-}
-$tuples = $unique;
-
-if (empty($tuples)) {
-    http_response_code(400);
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'No valid tuples found in vector']);
-    exit;
-}
-
-// ---------------------------------------------------------------------------
-// 4. Assign real dates in source timezone
+// 3. Assign real dates in source timezone
 //    The last tuple is the current time. Going backwards, if a tuple's clock
 //    time is >= the next tuple's clock time, it belongs to the previous day.
+//    Raw tuples must not be de-duplicated: the same clock time and temperature
+//    can legitimately occur again on another day.
 // ---------------------------------------------------------------------------
 $now = new DateTime('now', $parisTz);
 
 $lastIndex = count($tuples) - 1;
 $lastDateTime = clone $now;
 $lastDateTime->setTime($tuples[$lastIndex]['hour'], $tuples[$lastIndex]['minute'], 0);
+
+// Just after midnight, the latest record can still belong to the previous day
+// (for example 23:59 when the request is received at 00:01). If the last tuple
+// is clearly ahead of the current time (more than 5 minutes, to tolerate small
+// clock skew), it is anchored on the previous day instead.
+$lastTs = $lastDateTime->getTimestamp();
+$nowTs  = $now->getTimestamp();
+if ($lastTs > $nowTs + 300) {
+    $lastDateTime->modify('-1 day');
+}
 $tuples[$lastIndex]['datetime_france'] = $lastDateTime;
 
 for ($i = $lastIndex - 1; $i >= 0; $i--) {
@@ -177,7 +168,7 @@ for ($i = $lastIndex - 1; $i >= 0; $i--) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. Convert to target timezone (GMT/UTC) and build unique rows
+// 4. Convert to target timezone (GMT/UTC) and build unique rows
 // ---------------------------------------------------------------------------
 $utcTz    = new DateTimeZone($config['target_tz']);
 $unique   = [];
@@ -204,7 +195,7 @@ foreach ($tuples as $t) {
 $entries = array_values($unique);
 
 // ---------------------------------------------------------------------------
-// 6. Group entries by month and merge into existing CSV files
+// 5. Group entries by month and merge into existing CSV files
 // ---------------------------------------------------------------------------
 $dataDir = $config['data_dir'];
 if (!is_dir($dataDir)) {
@@ -231,6 +222,11 @@ foreach ($byMonth as $month => $monthEntries) {
             }
             $cols = str_getcsv($line);
             if (count($cols) >= 3) {
+                // Also remove future samples produced by the old midnight bug.
+                $timestamp = strtotime($cols[0]);
+                if ($timestamp !== false && $timestamp > $now->getTimestamp()) {
+                    continue;
+                }
                 $key = $cols[0] . '|' . $cols[1] . '|' . $cols[2];
                 $existing[$key] = [$cols[0], $cols[1], $cols[2]];
             }
@@ -274,7 +270,7 @@ foreach ($byMonth as $month => $monthEntries) {
 }
 
 // ---------------------------------------------------------------------------
-// 7. Response
+// 6. Response
 // ---------------------------------------------------------------------------
 header('Content-Type: application/json');
 echo json_encode([
