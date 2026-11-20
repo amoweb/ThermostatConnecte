@@ -144,6 +144,12 @@
     return d.getTime();
   }
   function dayEnd(i) { return dayStart(i + 1) - 1; }
+  function nextDayStart(ms) {
+    var d = new Date(ms);
+    d.setDate(d.getDate() + 1);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
 
   function setStatus(msg, isError) {
     statusEl.textContent = msg;
@@ -202,6 +208,68 @@
       });
   }
 
+  function heatingAreas(pts) {
+    var areas = [], start = -1;
+    for (var i = 0; i <= pts.length; i++) {
+      var heating = i < pts.length && pts[i][2] === 1;
+      if (heating && start === -1) start = i;
+      if (!heating && start !== -1) {
+        // Include the first OFF point: it is also the end of the visible red area.
+        var end = i < pts.length ? i : pts.length - 1;
+        var durationHours = (pts[end][0] - pts[start][0]) / 3600000;
+        if (durationHours > 0) {
+          var slope = (pts[end][1] - pts[start][1]) / durationHours;
+          areas.push([
+            { name: slope.toFixed(2) + ' °C/h', xAxis: pts[start][0] },
+            { xAxis: pts[end][0] }
+          ]);
+        }
+        start = -1;
+      }
+    }
+    return areas;
+  }
+
+  function dailyHeating(pts) {
+    var result = { midnights: [], percentages: [] };
+    if (pts.length < 2) return result;
+
+    var days = [], currentDay = null;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var cursor = pts[i][0], intervalEnd = pts[i + 1][0];
+      while (cursor < intervalEnd) {
+        var midnight = startOfDay(cursor);
+        if (!currentDay || currentDay.start !== midnight) {
+          currentDay = { start: midnight, total: 0, heating: 0 };
+          days.push(currentDay);
+        }
+        var end = Math.min(intervalEnd, nextDayStart(midnight));
+        var duration = end - cursor;
+        currentDay.total += duration;
+        if (pts[i][2] === 1) currentDay.heating += duration;
+        cursor = end;
+      }
+    }
+
+    var first = pts[0][0], last = pts[pts.length - 1][0];
+    for (var j = 0; j < days.length; j++) {
+      var day = days[j];
+      var nextMidnight = nextDayStart(day.start);
+      if (j > 0) result.midnights.push({ xAxis: day.start });
+      if (day.total > 0) {
+        var percentage = 100 * day.heating / day.total;
+        result.percentages.push([
+          {
+            name: fmtDate(day.start) + ' : ' + percentage.toFixed(1) + ' %',
+            xAxis: Math.max(first, day.start)
+          },
+          { xAxis: Math.min(last, nextMidnight) }
+        ]);
+      }
+    }
+    return result;
+  }
+
   function render(payload) {
     var pts = payload.points || [];
     var temp = [], heat = [];
@@ -209,14 +277,20 @@
       temp.push([pts[i][0], pts[i][1]]);
       heat.push([pts[i][0], pts[i][2]]);
     }
+    var daily = dailyHeating(pts);
     chart.setOption({
       dataZoom: [
         { type: 'inside', startValue: payload.from, endValue: payload.to },
         { type: 'slider', startValue: payload.from, endValue: payload.to }
       ],
       series: [
-        { id: 'heat', data: heat },
-        { id: 'temp', data: temp }
+        { id: 'heat', data: heat, markArea: { data: heatingAreas(pts) } },
+        { id: 'temp', data: temp },
+        {
+          id: 'daily',
+          markLine: { data: daily.midnights },
+          markArea: { data: daily.percentages }
+        }
       ]
     });
     setStatus(pts.length
@@ -306,6 +380,20 @@
             opacity: 1,
             origin: 'start'
           },
+          markArea: {
+            silent: true,
+            itemStyle: { color: 'rgba(0, 0, 0, 0)' },
+            label: {
+              show: true,
+              position: 'insideTop',
+              color: '#b71c1c',
+              fontWeight: 'bold',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              padding: [3, 5],
+              borderRadius: 2
+            },
+            data: []
+          },
           emphasis: { disabled: true }
         },
         {
@@ -314,6 +402,32 @@
           symbol: 'circle', showSymbol: false, connectNulls: false,
           lineStyle: { width: 1.5, color: '#1565c0' },
           itemStyle: { color: '#1565c0' }
+        },
+        {
+          id: 'daily', type: 'line', data: [],
+          yAxisIndex: 1, silent: true, z: 4,
+          markLine: {
+            silent: true,
+            symbol: ['none', 'none'],
+            lineStyle: { color: '#5f6368', type: 'dashed', width: 1 },
+            label: { show: false },
+            data: []
+          },
+          markArea: {
+            silent: true,
+            itemStyle: { color: 'rgba(0, 0, 0, 0)' },
+            label: {
+              show: true,
+              position: 'insideBottom',
+              color: '#3c4043',
+              fontWeight: 'bold',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              padding: [3, 5],
+              borderRadius: 2
+            },
+            data: []
+          },
+          emphasis: { disabled: true }
         }
       ]
     });
